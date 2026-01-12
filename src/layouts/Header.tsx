@@ -5,15 +5,10 @@ import { useAtom } from "jotai";
 import { MdLightMode, MdDarkMode } from "react-icons/md";
 import { UserIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
-import IssueAssetModal from "@/components/IssueAssetModal";
-import { useQubicConnect } from "@/components/connect/QubicConnectContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const Header: React.FC = () => {
   const [settings, setSettings] = useAtom(settingsAtom);
-  const [issueAssetModalOpen, setIssueAssetModalOpen] = useState(false);
-  const { wallet } = useQubicConnect();
 
   const toggleDarkMode = () => {
     setSettings({ darkMode: !settings.darkMode });
@@ -72,7 +67,6 @@ const Header: React.FC = () => {
 
         </div>
       </div>
-      <IssueAssetModal open={issueAssetModalOpen} onOpenChange={setIssueAssetModalOpen} />
     </motion.div>
   );
 };
