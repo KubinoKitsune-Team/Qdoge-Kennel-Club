@@ -14,10 +14,10 @@ const Transactions: React.FC = () => {
                 </div>
                 <div className="relative z-10 grid w-full max-w-6xl gap-6">
                     <section className={`${panelClass} h-[320px]`}>
-                        <AssetTransfer />
+                        <IssuedAssets />
                     </section>
                     <section className={`${panelClass} h-[320px]`}>
-                        <IssuedAssets />
+                        <AssetTransfer />
                     </section>
                 </div>
             </div>

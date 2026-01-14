@@ -1,6 +1,6 @@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { fetchTrades } from "@/services/api.service";
+import { fetchSmartContractTrades } from "@/services/api.service";
 import { useState, useEffect } from "react";
 import { Trade } from "@/types/qx.types";
 import { Link } from "react-router-dom";
@@ -13,7 +13,7 @@ const SCShares: React.FC = () => {
 
     useEffect(() => {
         const getSCShares = async () => {
-            const res: Trade[] = await fetchTrades();
+            const res: Trade[] = await fetchSmartContractTrades();
             setScShares(res);
         };
         getSCShares();
@@ -51,7 +51,11 @@ const SCShares: React.FC = () => {
                             <TableBody className="divide-y divide-border/40 text-muted-foreground text-xs">
                                 {scShares.map((scShare, index) => (
                                     <TableRow key={index}>
-                                        <TableCell>{scShare.assetName}</TableCell>
+                                        <TableCell>
+                                            <Link to={`/qx-assets/${scShare.issuer}/${scShare.assetName}`} className="text-primary hover:text-primary/70">
+                                                {scShare.assetName}
+                                            </Link>
+                                        </TableCell>
                                         <TableCell className={cn(scShare.bid ? "text-green-500" : "text-red-500")}>{scShare.bid ? "Buy" : "Sell"}</TableCell>
                                         <TableCell className="!text-right">{scShare.price.toLocaleString()}</TableCell>
                                         <TableCell className="!text-right">{scShare.numberOfShares.toLocaleString()}</TableCell>

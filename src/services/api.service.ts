@@ -16,6 +16,18 @@ export const fetchTrades = async (): Promise<Trade[]> => {
   return data;
 };
 
+export const fetchTokenTrades = async (): Promise<Trade[]> => {
+  const response = await fetch(`${API_URL}/v1/qx/token-trades`);
+  const data = await response.json();
+  return data;
+};
+
+export const fetchSmartContractTrades = async (): Promise<Trade[]> => {
+  const response = await fetch(`${API_URL}/v1/qx/smart-contract-trades`);
+  const data = await response.json();
+  return data;
+};
+
 // Transfers
 export const fetchTransfers = async (): Promise<Transfer[]> => {
   const response = await fetch(`${API_URL}/v1/qx/transfers`);
