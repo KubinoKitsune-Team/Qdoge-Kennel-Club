@@ -5,6 +5,8 @@ import User from "@/pages/user";
 import Entity from "@/pages/entity";
 import Trades from "@/pages/trades";
 import Transactions from "@/pages/transactions";
+import QXAssets from "@/pages/qxassets";
+import QXAssetDetail from "@/pages/qxassetdetail";
 import { createBrowserRouter } from "react-router-dom";
 
 const router = createBrowserRouter([
@@ -28,6 +30,14 @@ const router = createBrowserRouter([
       {
         path: "/transactions",
         element: <Transactions />,
+      },
+      {
+        path: "/qx-assets",
+        element: <QXAssets />,
+      },
+      {
+        path: "/qx-assets/:issuer/:asset",
+        element: <QXAssetDetail />,
       },
       {
         path: "/account",

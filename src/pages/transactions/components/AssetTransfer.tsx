@@ -21,7 +21,7 @@ const AssetTransfer: React.FC = () => {
     return (
         <div className="flex h-full min-h-0 w-full flex-col gap-4">
             <div className="flex items-center justify-center">
-                <p className="text-xl font-bold">Assets Transfer</p>
+                <p className="text-xl font-bold">Latest Assets Transfer</p>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden border border-border/60 bg-card/70 p-2 shadow-inner shadow-black/5 dark:shadow-black/40">
                 <ScrollArea
@@ -48,8 +48,12 @@ const AssetTransfer: React.FC = () => {
                             <TableBody className="divide-y divide-border/40 text-muted-foreground text-xs">
                                 {assetTransfers.map((assetTransfer, index) => (
                                     <TableRow key={index}>
-                                        <TableCell>{assetTransfer.extraData.name}</TableCell>
-                                        <TableCell className="!text-right">{assetTransfer.amount.toLocaleString()}</TableCell>
+                                        <TableCell>
+                                            <Link to={`/qx-assets/${assetTransfer.extraData.issuer}/${assetTransfer.extraData.name}`} className="text-primary hover:text-primary/70">
+                                                {assetTransfer.extraData.name}
+                                            </Link>
+                                        </TableCell>
+                                        <TableCell className="!text-right">{assetTransfer.extraData.numberOfShares.toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Link to={`${EXPLORER_URL}/network/tick/${assetTransfer.tick}`} target="_blank" className="text-primary hover:text-primary/70">
                                                 {assetTransfer.tick}

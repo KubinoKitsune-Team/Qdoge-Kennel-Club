@@ -277,16 +277,14 @@ export default function LightweightChart({
   return (
     <div className={cn("relative flex h-full w-full flex-col", className)}>
       {/* Chart Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 pb-2 pt-0 dark:border-gray-800">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">{symbol}</h3>
-            <span className={cn("text-sm", priceChange >= 0 ? "text-green-500" : "text-red-500")}>
-              {priceChangePercent >= 0 ? "+" : ""}
-              {priceChangePercent.toFixed(2)}%
-            </span>
-          </div>
-          <p className="text-sm text-gray-500">{title}</p>
+      <div className="flex items-center justify-center border-b border-gray-200 pb-2 pt-0 dark:border-gray-800">
+        <div className="flex flex-row items-center gap-1 justify-center">
+          <p className="text-lg font-bold">{title}</p>(
+          <p className="text-xs text-muted-foreground">{symbol}</p>
+          <span className={cn("text-xs", priceChange >= 0 ? "text-green-500" : "text-red-500")}>
+            {priceChangePercent >= 0 ? "+" : ""}
+            {priceChangePercent.toFixed(2)}%
+          </span>)
         </div>
 
         <div className="flex items-center gap-2">{HeaderComponent ? HeaderComponent : null}</div>
@@ -328,7 +326,7 @@ export default function LightweightChart({
       </div>
 
       {/* Chart Container */}
-      <div className="relative flex-1">
+      <div className="relative flex-1 border-b border-gray-200 dark:border-gray-800">
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/20">
             <Loader2 className="h-8 w-8 animate-spin text-blue-500" />

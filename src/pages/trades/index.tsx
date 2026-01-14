@@ -14,10 +14,10 @@ const Trades: React.FC = () => {
                 </div>
                 <div className="relative z-10 grid w-full max-w-6xl gap-6">
                     <section className={`${panelClass} h-[320px]`}>
-                        <Tokens />
+                        <SCShares />
                     </section>
                     <section className={`${panelClass} h-[320px]`}>
-                        <SCShares />
+                        <Tokens />
                     </section>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import OrderEntity from "./components/OrderEntity";
-import TradeHistory from "./components/TradeHistory";
-import AssetsTransfer from "./components/AssetsTransfer";
+import EntityTrades from "./components/EntityTransfers";
+import EntityTransfers from "./components/EntityTransfers";
 import { Map, Copy } from "lucide-react";
 import { EXPLORER_URL } from "@/constants";
 import { copyText } from "@/utils";
@@ -46,10 +46,10 @@ const Entity: React.FC = () => {
                         <OrderEntity entity={entity} type="bids" />
                     </section>
                     <section className={`${panelClass} h-[240px] lg:col-span-2`}>
-                        <TradeHistory entity={entity} />
+                        <EntityTrades entity={entity} />
                     </section>
                     <section className={`${panelClass} h-[240px] lg:col-span-2`}>
-                        <AssetsTransfer entity={entity} />
+                        <EntityTransfers entity={entity} />
                     </section>
                 </div>
             </div>
