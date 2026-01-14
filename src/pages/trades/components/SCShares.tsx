@@ -1,28 +1,28 @@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { fetchEntityTrades } from "@/services/api.service";
+import { fetchTrades } from "@/services/api.service";
 import { useState, useEffect } from "react";
 import { Trade } from "@/types/qx.types";
 import { Link } from "react-router-dom";
 import { EXPLORER_URL } from "@/constants";
 import { cn } from "@/utils";
 
-const TradeHistory: React.FC<{ entity: string }> = ({ entity }) => {
+const SCShares: React.FC = () => {
 
-    const [entityTrades, setEntityTrades] = useState<Trade[]>([]);
+    const [scShares, setScShares] = useState<Trade[]>([]);
 
     useEffect(() => {
-        const getEntityTradesHistory = async () => {
-            const res: Trade[] = await fetchEntityTrades(entity);
-            setEntityTrades(res);
+        const getSCShares = async () => {
+            const res: Trade[] = await fetchTrades();
+            setScShares(res);
         };
-        getEntityTradesHistory();
-    }, [entity]);
+        getSCShares();
+    }, []);
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col gap-4">
             <div className="flex items-center justify-center">
-                <p className="text-xl font-bold">Trade History</p>
+                <p className="text-xl font-bold">Smart Contract Shares</p>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden border border-border/60 bg-card/70 p-2 shadow-inner shadow-black/5 dark:shadow-black/40">
                 <ScrollArea
@@ -49,29 +49,29 @@ const TradeHistory: React.FC<{ entity: string }> = ({ entity }) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody className="divide-y divide-border/40 text-muted-foreground text-xs">
-                                {entityTrades.map((entityTrade, index) => (
+                                {scShares.map((scShare, index) => (
                                     <TableRow key={index}>
-                                        <TableCell>{entityTrade.assetName}</TableCell>
-                                        <TableCell className={cn(entityTrade.bid ? "text-green-500" : "text-red-500")}>{entityTrade.bid ? "Buy" : "Sell"}</TableCell>
-                                        <TableCell className="!text-right">{entityTrade.price.toLocaleString()}</TableCell>
-                                        <TableCell className="!text-right">{entityTrade.numberOfShares.toLocaleString()}</TableCell>
-                                        <TableCell className="!text-right">{(entityTrade.price * entityTrade.numberOfShares).toLocaleString()}</TableCell>
+                                        <TableCell>{scShare.assetName}</TableCell>
+                                        <TableCell className={cn(scShare.bid ? "text-green-500" : "text-red-500")}>{scShare.bid ? "Buy" : "Sell"}</TableCell>
+                                        <TableCell className="!text-right">{scShare.price.toLocaleString()}</TableCell>
+                                        <TableCell className="!text-right">{scShare.numberOfShares.toLocaleString()}</TableCell>
+                                        <TableCell className="!text-right">{(scShare.price * scShare.numberOfShares).toLocaleString()}</TableCell>
                                         <TableCell className="truncate">
-                                            <Link to={`${EXPLORER_URL}/network/tx/${entityTrade.transactionHash}`} target="_blank" className="text-primary hover:text-primary/70">
-                                                {entityTrade.transactionHash.slice(0, 5)}...{entityTrade.transactionHash.slice(-5)}
+                                            <Link to={`${EXPLORER_URL}/network/tx/${scShare.transactionHash}`} target="_blank" className="text-primary hover:text-primary/70">
+                                                {scShare.transactionHash.slice(0, 5)}...{scShare.transactionHash.slice(-5)}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
-                                            <Link to={`/entity/${entityTrade.taker}`} className="text-primary hover:text-primary/70">
-                                                {entityTrade.taker.slice(0, 5)}...{entityTrade.taker.slice(-5)}
+                                            <Link to={`/entity/${scShare.taker}`} className="text-primary hover:text-primary/70">
+                                                {scShare.taker.slice(0, 5)}...{scShare.taker.slice(-5)}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
-                                            <Link to={`/entity/${entityTrade.maker}`} className="text-primary hover:text-primary/70">
-                                                {entityTrade.maker.slice(0, 5)}...{entityTrade.maker.slice(-5)}
+                                            <Link to={`/entity/${scShare.maker}`} className="text-primary hover:text-primary/70">
+                                                {scShare.maker.slice(0, 5)}...{scShare.maker.slice(-5)}
                                             </Link>
                                         </TableCell>
-                                        <TableCell>{new Date(entityTrade.tickTime).toLocaleString()}</TableCell>
+                                        <TableCell>{new Date(scShare.tickTime).toLocaleString()}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -83,4 +83,4 @@ const TradeHistory: React.FC<{ entity: string }> = ({ entity }) => {
     );
 }
 
-export default TradeHistory;
+export default SCShares;

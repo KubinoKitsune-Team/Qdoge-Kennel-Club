@@ -83,7 +83,7 @@ const UserTradeHistory: React.FC<UserTradeHistoryProps> = ({ address }) => {
                 <Link
                   to={`${EXPLORER_URL}/network/tx/${trade.transactionHash}`}
                   target="_blank"
-                  className="text-blue-500 hover:underline"
+                  className="text-primary hover:text-primary/70"
                 >
                   {trade.transactionHash}
                 </Link>

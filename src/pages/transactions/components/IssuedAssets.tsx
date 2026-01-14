@@ -1,22 +1,22 @@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { fetchEntityTransfers } from "@/services/api.service";
+import { fetchTransfers } from "@/services/api.service";
 import { useState, useEffect } from "react";
 import { Transfer } from "@/types/qx.types";
 import { Link } from "react-router-dom";
 import { EXPLORER_URL } from "@/constants";
 
-const AssetsTransfer: React.FC<{ entity: string }> = ({ entity }) => {
+const IssuedAssets: React.FC = () => {
 
-    const [entityAssetTransfers, setEntityAssetTransfers] = useState<Transfer[]>([]);
+    const [issuedAssets, setIssuedAssets] = useState<Transfer[]>([]);
 
     useEffect(() => {
-        const getEntityAssetTransfersHistory = async () => {
-            const res: Transfer[] = await fetchEntityTransfers(entity);
-            setEntityAssetTransfers(res);
+        const getIssuedAssetsHistory = async () => {
+            const res: Transfer[] = await fetchTransfers();
+            setIssuedAssets(res);
         };
-        getEntityAssetTransfersHistory();
-    }, [entity]);
+        getIssuedAssetsHistory();
+    }, []);
 
     return (
         <div className="flex h-full min-h-0 w-full flex-col gap-4">
@@ -46,31 +46,31 @@ const AssetsTransfer: React.FC<{ entity: string }> = ({ entity }) => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody className="divide-y divide-border/40 text-muted-foreground text-xs">
-                                {entityAssetTransfers.map((entityAssetTransfer, index) => (
+                                {issuedAssets.map((issuedAsset, index) => (
                                     <TableRow key={index}>
-                                        <TableCell>{entityAssetTransfer.extraData.name}</TableCell>
-                                        <TableCell className="!text-right">{entityAssetTransfer.amount.toLocaleString()}</TableCell>
+                                        <TableCell>{issuedAsset.extraData.name}</TableCell>
+                                        <TableCell className="!text-right">{issuedAsset.amount.toLocaleString()}</TableCell>
                                         <TableCell>
-                                            <Link to={`${EXPLORER_URL}/network/tick/${entityAssetTransfer.tick}`} target="_blank" className="text-primary hover:text-primary/70">
-                                                {entityAssetTransfer.tick}
+                                            <Link to={`${EXPLORER_URL}/network/tick/${issuedAsset.tick}`} target="_blank" className="text-primary hover:text-primary/70">
+                                                {issuedAsset.tick}
                                             </Link>
                                         </TableCell>
                                         <TableCell className="max-w-[150px] truncate">
-                                            <Link to={`${EXPLORER_URL}/network/tx/${entityAssetTransfer.hash}`} target="_blank" className="text-primary hover:text-primary/70">
-                                                {entityAssetTransfer.hash.slice(0, 5)}...{entityAssetTransfer.hash.slice(-5)}
+                                            <Link to={`${EXPLORER_URL}/network/tx/${issuedAsset.hash}`} target="_blank" className="text-primary hover:text-primary/70">
+                                                {issuedAsset.hash.slice(0, 5)}...{issuedAsset.hash.slice(-5)}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
-                                            <Link to={`/entity/${entityAssetTransfer.source}`} className="text-primary hover:text-primary/70">
-                                                {entityAssetTransfer.source.slice(0,5)}...{entityAssetTransfer.source.slice(-5)}
+                                            <Link to={`/entity/${issuedAsset.source}`} className="text-primary hover:text-primary/70">
+                                                {issuedAsset.source.slice(0,5)}...{issuedAsset.source.slice(-5)}
                                             </Link>
                                         </TableCell>
                                         <TableCell>
-                                            <Link to={`/entity/${entityAssetTransfer.extraData.newOwner}`} className="text-primary hover:text-primary/70">
-                                                {entityAssetTransfer.extraData.newOwner.slice(0,5)}...{entityAssetTransfer.extraData.newOwner.slice(-5)}
+                                            <Link to={`/entity/${issuedAsset.extraData.newOwner}`} className="text-primary hover:text-primary/70">
+                                                {issuedAsset.extraData.newOwner.slice(0,5)}...{issuedAsset.extraData.newOwner.slice(-5)}
                                             </Link>
                                         </TableCell>
-                                        <TableCell>{new Date(entityAssetTransfer.tickTime).toLocaleString()}</TableCell>
+                                        <TableCell>{new Date(issuedAsset.tickTime).toLocaleString()}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -82,4 +82,4 @@ const AssetsTransfer: React.FC<{ entity: string }> = ({ entity }) => {
     );
 }
 
-export default AssetsTransfer;
+export default IssuedAssets;

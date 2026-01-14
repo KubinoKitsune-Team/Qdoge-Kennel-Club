@@ -6,20 +6,16 @@ import { EntityOrder } from "@/types/qx.types";
 
 const SellOrderEntity: React.FC<{ entity: string, type: string }> = ({ entity, type }) => {
 
-    const [orders, setOrders] = useState<EntityOrder[]>([]);
+    const [entityOrders, setEntityOrders] = useState<EntityOrder[]>([]);
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            if (type === "asks") {
-                const res = await fetchEntityAskOrders(entity);
-                setOrders(res);
-            }
-            if (type === "bids") {
-                const res = await fetchEntityBidOrders(entity);
-                setOrders(res);
-            }
+        const getEntityOrders = async () => {
+            let res: EntityOrder[] = [];
+            if(type==="asks") res = await fetchEntityAskOrders(entity);
+            if(type==="bids") res = await fetchEntityBidOrders(entity);
+            setEntityOrders(res);
         };
-        fetchOrders();
+        getEntityOrders();
     }, [entity, type]);
 
     return (
@@ -48,13 +44,13 @@ const SellOrderEntity: React.FC<{ entity: string, type: string }> = ({ entity, t
                                 </TableRow>
                             </TableHeader>  
                             <TableBody className="divide-y divide-border/40 text-muted-foreground text-xs">
-                                {orders.map((order, index) => (
+                                {entityOrders.map((entityOrder, index) => (
                                     <TableRow key={index}>
-                                        <TableCell>{order.assetName}</TableCell>
-                                        <TableCell>{order.issuerId.slice(0, 5)}...{order.issuerId.slice(-5)}</TableCell>
-                                        <TableCell className="text-right">{order.price.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right">{order.numberOfShares.toLocaleString()}</TableCell>
-                                        <TableCell className="text-right">{(order.price * order.numberOfShares).toLocaleString()}</TableCell>
+                                        <TableCell>{entityOrder.assetName}</TableCell>
+                                        <TableCell>{entityOrder.issuerId.slice(0, 5)}...{entityOrder.issuerId.slice(-5)}</TableCell>
+                                        <TableCell className="!text-right">{entityOrder.price.toLocaleString()}</TableCell>
+                                        <TableCell className="!text-right">{entityOrder.numberOfShares.toLocaleString()}</TableCell>
+                                        <TableCell className="!text-right">{(entityOrder.price * entityOrder.numberOfShares).toLocaleString()}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
