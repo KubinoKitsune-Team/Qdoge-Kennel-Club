@@ -16,7 +16,6 @@ const Activity: React.FC = () => {
   const [backendEpochs, setBackendEpochs] = useState<Epoch[]>([]);
   const [isLoadingEpochs, setIsLoadingEpochs] = useState(true);
 
-  // Fetch epochs from backend
   useEffect(() => {
     const loadEpochs = async () => {
       try {
@@ -29,11 +28,9 @@ const Activity: React.FC = () => {
         setIsLoadingEpochs(false);
       }
     };
-
     loadEpochs();
   }, []);
 
-  // Get current epoch from backend or fallback to tickInfo
   const currentEpoch = useMemo(() => {
     if (backendEpochs.length > 0) {
       const ongoing = backendEpochs.find(e => e.is_ongoing);
@@ -42,40 +39,28 @@ const Activity: React.FC = () => {
     return tickInfo?.epoch || 197;
   }, [backendEpochs, tickInfo]);
   
-  // Generate list of epochs from backend or fallback to generated list
   const epochs = useMemo(() => {
     if (backendEpochs.length > 0) {
       return backendEpochs.map(e => e.epoch_num).sort((a, b) => b - a);
     }
-    
-    // Fallback: generate list starting from epoch 197
     const epochList: number[] = [];
-    const startEpoch = 197;
-    for (let i = currentEpoch; i >= startEpoch; i--) {
-      epochList.push(i);
-    }
+    for (let i = currentEpoch; i >= 197; i--) epochList.push(i);
     return epochList;
   }, [backendEpochs, currentEpoch]);
 
-  // Handle epoch selection - only one epoch can be expanded at a time
   const handleEpochSelect = (epoch: number) => {
     if (selectedEpoch === epoch) {
-      // If clicking on the already selected epoch, collapse it
       setExpandedEpochs(new Set());
       setSelectedEpoch(null);
       setSelectedActivity(null);
     } else {
-      // Select new epoch - collapse previous one and expand new one
       setExpandedEpochs(new Set([epoch]));
       setSelectedEpoch(epoch);
-      setSelectedActivity(null); // Reset activity when epoch changes
+      setSelectedActivity(null);
     }
   };
 
-  // Handle activity selection
-  const handleActivitySelect = (activity: ActivityType) => {
-    setSelectedActivity(activity);
-  };
+  const handleActivitySelect = (activity: ActivityType) => setSelectedActivity(activity);
 
   if (isLoadingEpochs) {
     return (
@@ -88,39 +73,32 @@ const Activity: React.FC = () => {
   }
 
   return (
-    <main className="relative isolate flex min-h-[calc(100vh-140px)] w-full bg-background overflow-hidden">
-      <div className="flex w-full h-full">
-        {/* Section 1: Epoch Selection */}
-        <EpochSelectionSection
-          epochs={epochs}
-          selectedEpoch={selectedEpoch}
-          expandedEpochs={expandedEpochs}
-          onEpochSelect={handleEpochSelect}
-        />
-
-        {/* Section 2: Activity Selection */}
-        <AnimatePresence mode="wait">
-          {selectedEpoch && (
-            <ActivitySelectionSection
-              key={selectedEpoch}
-              epoch={selectedEpoch}
-              selectedActivity={selectedActivity}
-              onActivitySelect={handleActivitySelect}
-            />
-          )}
-        </AnimatePresence>
-
-        {/* Section 3: Display Section */}
-        <AnimatePresence mode="wait">
-          {selectedActivity && selectedEpoch && (
-            <DisplaySection
-              key={`${selectedEpoch}-${selectedActivity}`}
-              epoch={selectedEpoch}
-              activity={selectedActivity}
-            />
-          )}
-        </AnimatePresence>
-      </div>
+    <main className="relative isolate flex flex-col md:flex-row min-h-[calc(100vh-140px)] w-full bg-background overflow-hidden">
+      <EpochSelectionSection
+        epochs={epochs}
+        selectedEpoch={selectedEpoch}
+        expandedEpochs={expandedEpochs}
+        onEpochSelect={handleEpochSelect}
+      />
+      <AnimatePresence mode="wait">
+        {selectedEpoch && (
+          <ActivitySelectionSection
+            key={selectedEpoch}
+            epoch={selectedEpoch}
+            selectedActivity={selectedActivity}
+            onActivitySelect={handleActivitySelect}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence mode="wait">
+        {selectedActivity && selectedEpoch && (
+          <DisplaySection
+            key={`${selectedEpoch}-${selectedActivity}`}
+            epoch={selectedEpoch}
+            activity={selectedActivity}
+          />
+        )}
+      </AnimatePresence>
     </main>
   );
 };
