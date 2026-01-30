@@ -53,6 +53,24 @@ export interface AirdropPreviewResponse {
   results: AirdropResult[];
 }
 
+export interface EpochTransfer {
+  transfer_id: number;
+  tx_hash: string;
+  source: string;
+  destination: string;
+  issuer: string;
+  asset_name: string;
+  amount: string;
+  tick: number;
+  tickdate: string;
+  money_flew: boolean;
+}
+
+export interface EpochTransfersResponse {
+  epoch_num: number;
+  transfers: EpochTransfer[];
+}
+
 // Fetch all epochs
 export const fetchEpochs = async (): Promise<Epoch[]> => {
   const response = await fetch(`${BACKEND_API_URL}/epochs`);
@@ -111,4 +129,14 @@ export const fetchAirdropPreview = async (epochNum: number): Promise<AirdropPrev
   }
   const data: AirdropPreviewResponse = await response.json();
   return data;
+};
+
+// Fetch transfers for a specific epoch
+export const fetchEpochTransfers = async (epochNum: number): Promise<EpochTransfer[]> => {
+  const response = await fetch(`${BACKEND_API_URL}/epochs/${epochNum}/transfers`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch transfers for epoch ${epochNum}: ${response.statusText}`);
+  }
+  const data: EpochTransfersResponse = await response.json();
+  return data.transfers;
 };

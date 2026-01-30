@@ -53,7 +53,7 @@ const AssetTransfers: React.FC<{ issuer: string, asset: string }> = ({ issuer, a
                                                 {assetTransfer.extraData.name}
                                             </Link>
                                         </TableCell>
-                                        <TableCell className="!text-right">{assetTransfer.extraData.numberOfShares.toLocaleString()}</TableCell>
+                                        <TableCell className="!text-right">{Number(assetTransfer.extraData.numberOfShares).toLocaleString()}</TableCell>
                                         <TableCell>
                                             <Link to={`${EXPLORER_URL}/network/tick/${assetTransfer.tick}`} target="_blank" className="text-primary hover:text-primary/70">
                                                 {assetTransfer.tick}

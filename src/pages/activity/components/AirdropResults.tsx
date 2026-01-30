@@ -1,11 +1,12 @@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { fetchAirdropResults, fetchAirdropPreview, type AirdropResult } from "@/services/backend.service";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 interface AirdropResultsProps {
   epoch: number;
+  searchTerm?: string;
 }
 
 const MEDAL_EMOJIS = { 1: "🥇", 2: "🥈", 3: "🥉" } as const;
@@ -26,7 +27,7 @@ const formatAmount = (amount: string): string => {
   return num.toLocaleString();
 };
 
-const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch }) => {
+const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "" }) => {
   const [results, setResults] = useState<AirdropResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +66,13 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch }) => {
     getAirdropResults();
   }, [epoch]);
 
+  // Filter results by search term
+  const filteredResults = useMemo(() => {
+    if (!searchTerm.trim()) return results;
+    const term = searchTerm.toLowerCase();
+    return results.filter(r => r.wallet_id.toLowerCase().includes(term));
+  }, [results, searchTerm]);
+
   return (
     <div className="flex w-full flex-col gap-4">
       {/* Header */}
@@ -98,8 +106,17 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch }) => {
           <div className="flex items-center justify-center py-12">
             <p className="text-muted-foreground">No airdrop results available</p>
           </div>
+        ) : filteredResults.length === 0 ? (
+          <div className="flex items-center justify-center py-12">
+            <p className="text-muted-foreground">No results match "{searchTerm}"</p>
+          </div>
         ) : (
           <div className="w-full">
+            {searchTerm && (
+              <div className="mb-2 text-xs text-muted-foreground">
+                Showing {filteredResults.length} of {results.length} results
+              </div>
+            )}
             <Table className="table-auto [&_td]:whitespace-nowrap [&_td]:text-center [&_th]:text-center">
               <TableHeader className="text-xs border-b border-border/60 bg-card/90 [&_th]:bg-card/90 [&_th]:text-card-foreground">
                 <TableRow>
@@ -110,7 +127,7 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch }) => {
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-border/40 text-muted-foreground text-xs">
-                {results.map((result) => (
+                {filteredResults.map((result) => (
                   <TableRow key={result.rank}>
                     <TableCell>
                       <div className="flex items-center justify-center gap-1">

@@ -25,7 +25,7 @@ const headerClass = "text-xs sticky top-0 z-20 border-b border-border/60 bg-card
 const bodyClass = "divide-y divide-border/40 text-muted-foreground text-xs";
 const cardClass = "flex-1 min-h-0 border border-border/60 bg-card/70 p-2 shadow-inner shadow-black/5 dark:shadow-black/40";
 
-const EpochTrades: React.FC<{ epoch: number }> = ({ epoch }) => {
+const EpochTrades: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, searchTerm = "" }) => {
   const [trades, setTrades] = useState<EpochTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,12 +39,22 @@ const EpochTrades: React.FC<{ epoch: number }> = ({ epoch }) => {
       .finally(() => setIsLoading(false));
   }, [epoch]);
 
+  // Filter trades by search term
+  const filteredTrades = useMemo(() => {
+    if (!searchTerm.trim()) return trades;
+    const term = searchTerm.toLowerCase();
+    return trades.filter(t => 
+      t.taker_wallet.toLowerCase().includes(term) || 
+      t.maker_wallet.toLowerCase().includes(term)
+    );
+  }, [trades, searchTerm]);
+
   const { buyers, sellers, totals } = useMemo(() => {
     const bMap = new Map<string, { amount: number; tokens: number; zealy: boolean }>();
     const sMap = new Map<string, { amount: number; tokens: number; zealy: boolean }>();
     const tMap = new Map<string, { wallet: string; buy: number; sell: number; buyTokens: number; sellTokens: number; zealy: boolean }>();
 
-    trades.forEach(({ type, price, quantity, taker_wallet, maker_wallet, taker_is_zealy_registered, maker_is_zealy_registered }) => {
+    filteredTrades.forEach(({ type, price, quantity, taker_wallet, maker_wallet, taker_is_zealy_registered, maker_is_zealy_registered }) => {
       const tradeAmount = Number(price) * Number(quantity);
       const quantityNum = Number(quantity);
 
@@ -111,7 +121,7 @@ const EpochTrades: React.FC<{ epoch: number }> = ({ epoch }) => {
       sellers: toArr(sMap), 
       totals: [...tMap.values()].map(t => ({ ...t, isZealyRegistered: t.zealy, total: t.buy - t.sell, totalTokens: t.buyTokens - t.sellTokens })).sort((a, b) => Math.abs(b.total) - Math.abs(a.total))
     };
-  }, [trades]);
+  }, [filteredTrades]);
 
   if (isLoading || error || !trades.length) {
     return (
@@ -125,7 +135,9 @@ const EpochTrades: React.FC<{ epoch: number }> = ({ epoch }) => {
     <div className="flex flex-col w-full h-full gap-3">
       <div className="flex items-center justify-between">
         <span className="text-sm md:text-base font-semibold">Epoch {epoch} Trades</span>
-        <span className="text-xs text-muted-foreground">{trades.length} trades</span>
+        <span className="text-xs text-muted-foreground">
+          {searchTerm ? `${filteredTrades.length} / ${trades.length}` : `${trades.length}`} trades
+        </span>
       </div>
 
       <div className="grid w-full gap-3 grid-cols-1 md:grid-cols-2">
@@ -143,7 +155,7 @@ const EpochTrades: React.FC<{ epoch: number }> = ({ epoch }) => {
                     </TableRow>
                   </TableHeader>
                   <TableBody className={bodyClass}>
-                    {trades.map((t) => (
+                    {filteredTrades.map((t) => (
                       <TableRow key={t.trade_id}>
                         <TableCell className={cn(t.type === "buy" ? "text-green-500" : "text-red-500")}>{t.type === "buy" ? "Buy" : "Sell"}</TableCell>
                         <TableCell className="!text-right">{Number(t.price).toLocaleString()}</TableCell>
