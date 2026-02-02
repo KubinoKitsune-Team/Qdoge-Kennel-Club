@@ -1,24 +1,35 @@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { fetchAirdropResults, fetchAirdropPreview, type AirdropResult } from "@/services/backend.service";
-import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { fetchAirdropResults, fetchAirdropPreview, fetchUserInfo, type AirdropResult } from "@/services/backend.service";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { Download } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface AirdropResultsProps {
   epoch: number;
   searchTerm?: string;
+  connectedWallet?: string | null;
 }
 
 const MEDAL_EMOJIS = { 1: "🥇", 2: "🥈", 3: "🥉" } as const;
 
-const WalletCell = ({ wallet, isZealyRegistered }: { wallet: string; isZealyRegistered: boolean }) => (
-  <div className="flex items-center gap-1">
-    <Link to={`/entity/${wallet}`} className="text-primary hover:text-primary/70">
-      {wallet.slice(0, 5)}...{wallet.slice(-5)}
-    </Link>
-    {isZealyRegistered && <span className="text-green-500 text-xs">✅</span>}
-  </div>
-);
+const WalletCell = ({ wallet, isZealyRegistered, connectedWallet }: { wallet: string; isZealyRegistered: boolean; connectedWallet: string | null }) => {
+  const isYou = connectedWallet && wallet === connectedWallet;
+  return (
+    <div className="flex items-center gap-1">
+      {isYou ? (
+        <span className="text-yellow-500 font-semibold">YOU</span>
+      ) : (
+        <Link to={`/entity/${wallet}`} className="text-primary hover:text-primary/70">
+          {wallet.slice(0, 5)}...{wallet.slice(-5)}
+        </Link>
+      )}
+      {isZealyRegistered && <span className="text-green-500 text-xs">✅</span>}
+    </div>
+  );
+};
 
 const formatAmount = (amount: string): string => {
   const num = Number(amount);
@@ -27,12 +38,30 @@ const formatAmount = (amount: string): string => {
   return num.toLocaleString();
 };
 
-const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "" }) => {
+const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "", connectedWallet = null }) => {
   const [results, setResults] = useState<AirdropResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [totalAirdrop, setTotalAirdrop] = useState<string>("0");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!connectedWallet) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const userInfo = await fetchUserInfo(connectedWallet);
+        setIsAdmin(userInfo.role === "admin");
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminRole();
+  }, [connectedWallet]);
 
   useEffect(() => {
     const getAirdropResults = async () => {
@@ -73,6 +102,40 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "" 
     return results.filter(r => r.wallet_id.toLowerCase().includes(term));
   }, [results, searchTerm]);
 
+  // Download Excel file
+  const handleDownloadExcel = useCallback(() => {
+    if (results.length === 0) return;
+
+    // Prepare data with all fields
+    const excelData = results.map((r) => ({
+      wallet_id: r.wallet_id,
+      token_amt: r.token_amount,
+      buy_amt: r.buy_amount,
+      airdrop_amt: r.airdrop_amount,
+    }));
+
+    // Create worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Set column widths
+    worksheet["!cols"] = [
+      { wch: 62 }, // wallet_id column width
+      { wch: 15 }, // token_amt column width
+      { wch: 15 }, // buy_amt column width
+      { wch: 20 }, // airdrop_amt column width
+    ];
+
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Airdrop Results");
+
+    // Generate filename with epoch number
+    const filename = `airdrop_epoch_${epoch}.xlsx`;
+
+    // Download file
+    XLSX.writeFile(workbook, filename);
+  }, [results, epoch]);
+
   return (
     <div className="flex w-full flex-col gap-4">
       {/* Header */}
@@ -85,11 +148,24 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "" 
             </Badge>
           )}
         </div>
-        {totalAirdrop !== "0" && (
-          <div className="text-sm text-muted-foreground">
-            Total: <span className="font-semibold text-foreground">{formatAmount(totalAirdrop)}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {totalAirdrop !== "0" && (
+            <div className="text-sm text-muted-foreground">
+              Total: <span className="font-semibold text-foreground">{formatAmount(totalAirdrop)}</span>
+            </div>
+          )}
+          {isAdmin && results.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadExcel}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download Excel
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Table - Auto height based on content */}
@@ -122,7 +198,8 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "" 
                 <TableRow>
                   <TableHead>Rank</TableHead>
                   <TableHead>Wallet ID</TableHead>
-                  <TableHead>Buy Amount</TableHead>
+                  <TableHead>Token Amt</TableHead>
+                  <TableHead>Buy Amt</TableHead>
                   <TableHead>Airdrop Amount</TableHead>
                 </TableRow>
               </TableHeader>
@@ -138,7 +215,10 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "" 
                       </div>
                     </TableCell>
                     <TableCell>
-                      <WalletCell wallet={result.wallet_id} isZealyRegistered={result.is_zealy_registered} />
+                      <WalletCell wallet={result.wallet_id} isZealyRegistered={result.is_zealy_registered} connectedWallet={connectedWallet} />
+                    </TableCell>
+                    <TableCell className="!text-right text-blue-500 font-medium">
+                      {formatAmount(result.token_amount)}
                     </TableCell>
                     <TableCell className="!text-right text-green-500 font-medium">
                       {formatAmount(result.buy_amount)}

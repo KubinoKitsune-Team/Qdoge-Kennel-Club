@@ -14,6 +14,7 @@ import { connectSnap } from "./utils/snap";
 import { QubicVault } from "@qubic-lib/qubic-ts-vault-library";
 import { useAtom } from "jotai";
 import { balancesAtom } from "@/store/balances";
+import { registerUser } from "@/services/backend.service";
 
 interface Wallet {
   connectType: string;
@@ -56,6 +57,11 @@ export function QubicConnectProvider({ children }: QubicConnectProviderProps) {
     localStorage.setItem("wallet", JSON.stringify(wallet));
     setWallet(wallet);
     setConnected(true);
+    
+    // Register user in backend
+    registerUser(wallet.publicKey).catch((err) => {
+      console.error("Failed to register user:", err);
+    });
   };
 
   const disconnect = (): void => {

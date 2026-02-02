@@ -6,6 +6,7 @@ import EpochTransfers from "./EpochTransfers";
 import AirdropResults from "./AirdropResults";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
+import { useQubicConnect } from "@/components/connect/QubicConnectContext";
 
 interface DisplaySectionProps {
   epoch: number;
@@ -14,6 +15,8 @@ interface DisplaySectionProps {
 
 const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const { wallet } = useQubicConnect();
+  const connectedWallet = wallet?.publicKey || null;
 
   const handleClearSearch = () => setSearchTerm("");
 
@@ -56,11 +59,11 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
       <div className="flex-1 overflow-y-auto p-3 md:p-4 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
         <div className="mx-auto max-w-6xl h-full">
           {activity === "Trade" ? (
-            <EpochTrades epoch={epoch} searchTerm={searchTerm} />
+            <EpochTrades epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
           ) : activity === "Transfer" ? (
-            <EpochTransfers epoch={epoch} searchTerm={searchTerm} />
+            <EpochTransfers epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
           ) : activity === "Airdrop" ? (
-            <AirdropResults epoch={epoch} searchTerm={searchTerm} />
+            <AirdropResults epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
           ) : (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
               <div className="rounded-lg border-2 border-dashed border-border p-6 md:p-10 bg-muted/10 w-full max-w-2xl">

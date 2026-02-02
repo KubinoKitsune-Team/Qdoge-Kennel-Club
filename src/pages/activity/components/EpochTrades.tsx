@@ -13,19 +13,26 @@ const fmt = (n: number) => {
 };
 const short = (s: string) => `${s.slice(0, 5)}...${s.slice(-5)}`;
 
-const WalletWithZealy = ({ wallet, isZealyRegistered }: { wallet: string; isZealyRegistered: boolean }) => (
-  <div className="flex items-center gap-1">
-    <Link to={`/entity/${wallet}`} className="text-primary hover:text-primary/70">{short(wallet)}</Link>
-    {isZealyRegistered && <span className="text-green-500 text-xs">✅</span>}
-  </div>
-);
+const WalletDisplay = ({ wallet, isZealyRegistered, connectedWallet }: { wallet: string; isZealyRegistered: boolean; connectedWallet: string | null }) => {
+  const isYou = connectedWallet && wallet === connectedWallet;
+  return (
+    <div className="flex items-center gap-1">
+      {isYou ? (
+        <span className="text-yellow-500 font-semibold">YOU</span>
+      ) : (
+        <Link to={`/entity/${wallet}`} className="text-primary hover:text-primary/70">{short(wallet)}</Link>
+      )}
+      {isZealyRegistered && <span className="text-green-500 text-xs">✅</span>}
+    </div>
+  );
+};
 
 const tableClass = "table-auto [&_td]:whitespace-nowrap [&_td]:text-center [&_th]:text-center";
 const headerClass = "text-xs sticky top-0 z-20 border-b border-border/60 bg-card/90 backdrop-blur-sm [&_th]:sticky [&_th]:top-0 [&_th]:bg-card/90 [&_th]:text-card-foreground [&_th]:shadow-sm";
 const bodyClass = "divide-y divide-border/40 text-muted-foreground text-xs";
 const cardClass = "flex-1 min-h-0 border border-border/60 bg-card/70 p-2 shadow-inner shadow-black/5 dark:shadow-black/40";
 
-const EpochTrades: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, searchTerm = "" }) => {
+const EpochTrades: React.FC<{ epoch: number; searchTerm?: string; connectedWallet?: string | null }> = ({ epoch, searchTerm = "", connectedWallet = null }) => {
   const [trades, setTrades] = useState<EpochTrade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -164,8 +171,8 @@ const EpochTrades: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, 
                         <TableCell className="hidden md:table-cell truncate">
                           <Link to={`${EXPLORER_URL}/network/tx/${t.tx_hash}`} target="_blank" className="text-primary hover:text-primary/70">{short(t.tx_hash)}</Link>
                         </TableCell>
-                        <TableCell><WalletWithZealy wallet={t.taker_wallet} isZealyRegistered={t.taker_is_zealy_registered} /></TableCell>
-                        <TableCell className="hidden md:table-cell"><WalletWithZealy wallet={t.maker_wallet} isZealyRegistered={t.maker_is_zealy_registered} /></TableCell>
+                        <TableCell><WalletDisplay wallet={t.taker_wallet} isZealyRegistered={t.taker_is_zealy_registered} connectedWallet={connectedWallet} /></TableCell>
+                        <TableCell className="hidden md:table-cell"><WalletDisplay wallet={t.maker_wallet} isZealyRegistered={t.maker_is_zealy_registered} connectedWallet={connectedWallet} /></TableCell>
                         <TableCell>{new Date(t.tickdate).toLocaleString()}</TableCell>
                       </TableRow>
                     ))}
@@ -189,7 +196,7 @@ const EpochTrades: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, 
                   <TableBody className={bodyClass}>
                     {buyers.map((b, i) => (
                       <TableRow key={i}>
-                        <TableCell><WalletWithZealy wallet={b.wallet} isZealyRegistered={b.isZealyRegistered} /></TableCell>
+                        <TableCell><WalletDisplay wallet={b.wallet} isZealyRegistered={b.isZealyRegistered} connectedWallet={connectedWallet} /></TableCell>
                         <TableCell className="!text-right">{fmt(b.tokens)}</TableCell>
                         <TableCell className="!text-right text-green-500">{fmt(b.amount)}</TableCell>
                       </TableRow>
@@ -214,7 +221,7 @@ const EpochTrades: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, 
                   <TableBody className={bodyClass}>
                     {sellers.map((s, i) => (
                       <TableRow key={i}>
-                        <TableCell><WalletWithZealy wallet={s.wallet} isZealyRegistered={s.isZealyRegistered} /></TableCell>
+                        <TableCell><WalletDisplay wallet={s.wallet} isZealyRegistered={s.isZealyRegistered} connectedWallet={connectedWallet} /></TableCell>
                         <TableCell className="!text-right">{fmt(s.tokens)}</TableCell>
                         <TableCell className="!text-right text-red-500">{fmt(s.amount)}</TableCell>
                       </TableRow>
@@ -250,10 +257,7 @@ const EpochTrades: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, 
                     {totals.map((t, i) => (
                       <TableRow key={i}>
                         <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Link to={`/entity/${t.wallet}`} className="text-primary hover:text-primary/70">{short(t.wallet)}</Link>
-                            {t.isZealyRegistered && <span className="text-green-500 text-xs">✅</span>}
-                          </div>
+                          <WalletDisplay wallet={t.wallet} isZealyRegistered={t.isZealyRegistered} connectedWallet={connectedWallet} />
                         </TableCell>
                         <TableCell className="!text-right">{fmt(t.buyTokens)}</TableCell>
                         <TableCell className="!text-right text-green-500">{fmt(t.buy)}</TableCell>

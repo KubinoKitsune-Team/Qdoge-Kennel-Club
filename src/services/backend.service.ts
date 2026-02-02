@@ -36,6 +36,7 @@ export interface AirdropResult {
   wallet_id: string;
   is_zealy_registered: boolean;
   buy_amount: string;
+  token_amount: string;
   airdrop_amount: string;
 }
 
@@ -139,4 +140,82 @@ export const fetchEpochTransfers = async (epochNum: number): Promise<EpochTransf
   }
   const data: EpochTransfersResponse = await response.json();
   return data.transfers;
+};
+
+export interface UserInfo {
+  wallet_id: string;
+  role: "normal" | "admin";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RegisterUserResponse {
+  success: boolean;
+  wallet_id: string;
+  role: "normal" | "admin";
+  is_new: boolean;
+}
+
+// Register user when wallet connects
+export const registerUser = async (walletId: string): Promise<RegisterUserResponse> => {
+  const response = await fetch(`${BACKEND_API_URL}/users/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ wallet_id: walletId }),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to register user: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+// Get user info including role
+export const fetchUserInfo = async (walletId: string): Promise<UserInfo> => {
+  const response = await fetch(`${BACKEND_API_URL}/users/${walletId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch user info: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+// Admin API call helper - set epoch total airdrop
+export const setEpochTotalAirdrop = async (
+  epochNum: number,
+  totalAirdrop: number,
+  apiKey: string
+): Promise<{ success: boolean; epoch_num: number; total_airdrop: string }> => {
+  const response = await fetch(`${BACKEND_API_URL}/admin/epochs/${epochNum}/total-airdrop?total_airdrop=${totalAirdrop}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-API-Key": apiKey,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || `Failed to set total airdrop: ${response.statusText}`);
+  }
+  return response.json();
+};
+
+// Admin API call helper - set epoch threshold
+export const setEpochThreshold = async (
+  epochNum: number,
+  threshold: number,
+  apiKey: string
+): Promise<{ success: boolean; epoch_num: number; threshold: string }> => {
+  const response = await fetch(`${BACKEND_API_URL}/admin/epochs/${epochNum}/threshold?threshold=${threshold}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Admin-API-Key": apiKey,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(error.detail || `Failed to set threshold: ${response.statusText}`);
+  }
+  return response.json();
 };

@@ -7,8 +7,12 @@ import ActivitySelectionSection from "./components/ActivitySelectionSection";
 import DisplaySection from "./components/DisplaySection";
 import { ActivityType } from "./types";
 import { fetchEpochs, type Epoch } from "@/services/backend.service";
+import { useQubicConnect } from "@/components/connect/QubicConnectContext";
+import { Button } from "@/components/ui/button";
+import { Wallet } from "lucide-react";
 
 const Activity: React.FC = () => {
+  const { connected, toggleConnectModal } = useQubicConnect();
   const [tickInfo] = useAtom(tickInfoAtom);
   const [selectedEpoch, setSelectedEpoch] = useState<number | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<ActivityType | null>(null);
@@ -67,6 +71,24 @@ const Activity: React.FC = () => {
       <main className="relative isolate flex min-h-[calc(100vh-140px)] w-full bg-background overflow-hidden">
         <div className="flex items-center justify-center w-full h-full">
           <p className="text-muted-foreground">Loading epochs...</p>
+        </div>
+      </main>
+    );
+  }
+
+  // Require wallet connection to view activity page
+  if (!connected) {
+    return (
+      <main className="relative isolate flex min-h-[calc(100vh-140px)] w-full bg-background overflow-hidden">
+        <div className="flex flex-col items-center justify-center w-full h-full gap-4">
+          <Wallet className="w-16 h-16 text-muted-foreground" />
+          <h2 className="text-xl font-semibold text-foreground">Connect Your Wallet</h2>
+          <p className="text-muted-foreground text-center max-w-md">
+            Please connect your wallet to view activity data and track your trades and transfers.
+          </p>
+          <Button onClick={toggleConnectModal} className="mt-2">
+            Connect Wallet
+          </Button>
         </div>
       </main>
     );

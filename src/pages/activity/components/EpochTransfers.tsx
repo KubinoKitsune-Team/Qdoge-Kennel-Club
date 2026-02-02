@@ -13,12 +13,21 @@ const fmt = (n: number) => {
 };
 const short = (s: string) => `${s.slice(0, 5)}...${s.slice(-5)}`;
 
+const WalletDisplay = ({ wallet, connectedWallet }: { wallet: string; connectedWallet: string | null }) => {
+  const isYou = connectedWallet && wallet === connectedWallet;
+  return isYou ? (
+    <span className="text-yellow-500 font-semibold">YOU</span>
+  ) : (
+    <Link to={`/entity/${wallet}`} className="text-primary hover:text-primary/70">{short(wallet)}</Link>
+  );
+};
+
 const tableClass = "table-auto [&_td]:whitespace-nowrap [&_td]:text-center [&_th]:text-center";
 const headerClass = "text-xs sticky top-0 z-20 border-b border-border/60 bg-card/90 backdrop-blur-sm [&_th]:sticky [&_th]:top-0 [&_th]:bg-card/90 [&_th]:text-card-foreground [&_th]:shadow-sm";
 const bodyClass = "divide-y divide-border/40 text-muted-foreground text-xs";
 const cardClass = "flex-1 min-h-0 border border-border/60 bg-card/70 p-2 shadow-inner shadow-black/5 dark:shadow-black/40";
 
-const EpochTransfers: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoch, searchTerm = "" }) => {
+const EpochTransfers: React.FC<{ epoch: number; searchTerm?: string; connectedWallet?: string | null }> = ({ epoch, searchTerm = "", connectedWallet = null }) => {
   const [transfers, setTransfers] = useState<EpochTransfer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,10 +139,10 @@ const EpochTransfers: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoc
                           <Link to={`${EXPLORER_URL}/network/tx/${t.tx_hash}`} target="_blank" className="text-primary hover:text-primary/70">{short(t.tx_hash)}</Link>
                         </TableCell>
                         <TableCell>
-                          <Link to={`/entity/${t.source}`} className="text-primary hover:text-primary/70">{short(t.source)}</Link>
+                          <WalletDisplay wallet={t.source} connectedWallet={connectedWallet} />
                         </TableCell>
                         <TableCell>
-                          <Link to={`/entity/${t.destination}`} className="text-primary hover:text-primary/70">{short(t.destination)}</Link>
+                          <WalletDisplay wallet={t.destination} connectedWallet={connectedWallet} />
                         </TableCell>
                         <TableCell>{new Date(t.tickdate).toLocaleString()}</TableCell>
                       </TableRow>
@@ -165,7 +174,7 @@ const EpochTransfers: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoc
                     {senders.map((s, i) => (
                       <TableRow key={i}>
                         <TableCell>
-                          <Link to={`/entity/${s.wallet}`} className="text-primary hover:text-primary/70">{short(s.wallet)}</Link>
+                          <WalletDisplay wallet={s.wallet} connectedWallet={connectedWallet} />
                         </TableCell>
                         <TableCell className="!text-right">{s.count}</TableCell>
                         <TableCell className="!text-right text-orange-500">{fmt(s.amount)}</TableCell>
@@ -198,7 +207,7 @@ const EpochTransfers: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoc
                     {receivers.map((r, i) => (
                       <TableRow key={i}>
                         <TableCell>
-                          <Link to={`/entity/${r.wallet}`} className="text-primary hover:text-primary/70">{short(r.wallet)}</Link>
+                          <WalletDisplay wallet={r.wallet} connectedWallet={connectedWallet} />
                         </TableCell>
                         <TableCell className="!text-right">{r.count}</TableCell>
                         <TableCell className="!text-right text-blue-500">{fmt(r.amount)}</TableCell>
@@ -235,7 +244,7 @@ const EpochTransfers: React.FC<{ epoch: number; searchTerm?: string }> = ({ epoc
                     {totals.map((t, i) => (
                       <TableRow key={i}>
                         <TableCell>
-                          <Link to={`/entity/${t.wallet}`} className="text-primary hover:text-primary/70">{short(t.wallet)}</Link>
+                          <WalletDisplay wallet={t.wallet} connectedWallet={connectedWallet} />
                         </TableCell>
                         <TableCell className="!text-right">{t.sentCount}</TableCell>
                         <TableCell className="!text-right text-orange-500">{fmt(t.sent)}</TableCell>
