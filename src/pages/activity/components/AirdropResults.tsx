@@ -1,7 +1,7 @@
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { fetchAirdropResults, fetchAirdropPreview, type AirdropResult } from "@/services/backend.service";
+import { fetchAirdropResults, fetchAirdropPreview, fetchUserInfo, type AirdropResult } from "@/services/backend.service";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Download } from "lucide-react";
@@ -44,6 +44,24 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "",
   const [error, setError] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [totalAirdrop, setTotalAirdrop] = useState<string>("0");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is admin
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (!connectedWallet) {
+        setIsAdmin(false);
+        return;
+      }
+      try {
+        const userInfo = await fetchUserInfo(connectedWallet);
+        setIsAdmin(userInfo.role === "admin");
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminRole();
+  }, [connectedWallet]);
 
   useEffect(() => {
     const getAirdropResults = async () => {
@@ -136,7 +154,7 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "",
               Total: <span className="font-semibold text-foreground">{formatAmount(totalAirdrop)}</span>
             </div>
           )}
-          {results.length > 0 && (
+          {isAdmin && results.length > 0 && (
             <Button
               variant="outline"
               size="sm"
