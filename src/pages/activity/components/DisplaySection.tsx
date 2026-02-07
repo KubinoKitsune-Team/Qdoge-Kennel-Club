@@ -85,7 +85,7 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
       >
         <div className={activity === "Orderbook" ? "h-full min-h-0" : "mx-auto max-w-6xl h-full"}>
           {activity === "Orderbook" ? (
-            <OrderbookCockpit asset={orderbookAsset} />
+            <OrderbookCockpit key={orderbookAsset} asset={orderbookAsset} />
           ) : activity === "Trades" ? (
             <EpochTrades epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
           ) : activity === "Transfers" ? (
