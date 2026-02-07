@@ -76,6 +76,7 @@ export default function LightweightChart({
   const [selectedTimeFrame, setSelectedTimeFrame] = useState<TimeFrame>("1h");
   const [selectedChartType, setSelectedChartType] = useState<ChartType>("line");
   const [priceChangePercent, setPriceChangePercent] = useState<number>(0);
+  const [isChartReady, setIsChartReady] = useState(false);
 
   const effectiveThemeKey = themeKey ?? theme;
 
@@ -284,7 +285,7 @@ export default function LightweightChart({
     volumeSeriesRef.current = volumeSeries;
 
     if (volumeDataSeries.length > 0) volumeSeries.setData(volumeDataSeries);
-    recreatePriceSeries();
+    setIsChartReady(true);
     chart.timeScale().fitContent();
     chart.timeScale().applyOptions({
       minBarSpacing: 1,
@@ -329,10 +330,18 @@ export default function LightweightChart({
       volumeSeriesRef.current = null;
       lensLineRef.current = null;
       selectedLineRef.current = null;
+      setIsChartReady(false);
       resizeObserver.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Create / swap active series when chart is ready or mode changes.
+  useEffect(() => {
+    if (!isChartReady) return;
+    recreatePriceSeries();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isChartReady, selectedChartType]);
 
   // Token-driven theme updates (no recreate => no flicker).
   useEffect(() => {
@@ -416,11 +425,6 @@ export default function LightweightChart({
     (priceSeriesRef.current as ISeriesApi<"Candlestick">).setData(candleDataSeries ?? []);
   }, [candleDataSeries, selectedChartType]);
 
-  useEffect(() => {
-    recreatePriceSeries();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChartType]);
-
   // Liquidity Lens + selected marker lines
   useEffect(() => {
     const priceSeries = priceSeriesRef.current;
@@ -440,7 +444,7 @@ export default function LightweightChart({
         title: "Lens",
       });
     }
-  }, [lensPrice, chartTheme.lensLineColor]);
+  }, [lensPrice, chartTheme.lensLineColor, selectedChartType]);
 
   useEffect(() => {
     const priceSeries = priceSeriesRef.current;
@@ -460,7 +464,7 @@ export default function LightweightChart({
         title: "Selected",
       });
     }
-  }, [selectedPrice, chartTheme.seriesPrimary]);
+  }, [selectedPrice, chartTheme.seriesPrimary, selectedChartType]);
 
   // Handle time frame change
   const handleTimeFrameChange = (timeFrame: TimeFrame) => {
