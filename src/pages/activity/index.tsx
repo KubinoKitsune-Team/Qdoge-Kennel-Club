@@ -9,13 +9,15 @@ import { ActivityType } from "./types";
 import { fetchEpochs, type Epoch } from "@/services/backend.service";
 import { useQubicConnect } from "@/components/connect/QubicConnectContext";
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
+import { Wallet, PanelLeftOpen } from "lucide-react";
+import { cn } from "@/utils";
 
 const Activity: React.FC = () => {
   const { connected, toggleConnectModal } = useQubicConnect();
   const [tickInfo] = useAtom(tickInfoAtom);
   const [selectedEpoch, setSelectedEpoch] = useState<number | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<ActivityType | null>(null);
+  const [sidebarsHidden, setSidebarsHidden] = useState(false);
   const [expandedEpochs, setExpandedEpochs] = useState<Set<number>>(new Set());
   const [backendEpochs, setBackendEpochs] = useState<Epoch[]>([]);
   const [isLoadingEpochs, setIsLoadingEpochs] = useState(true);
@@ -64,7 +66,10 @@ const Activity: React.FC = () => {
     }
   };
 
-  const handleActivitySelect = (activity: ActivityType) => setSelectedActivity(activity);
+  const handleActivitySelect = (activity: ActivityType) => {
+    setSelectedActivity(activity);
+    setTimeout(() => setSidebarsHidden(true), 500);
+  };
 
   if (isLoadingEpochs) {
     return (
@@ -96,22 +101,44 @@ const Activity: React.FC = () => {
 
   return (
     <main className="relative isolate flex h-[calc(100vh-140px)] w-full flex-col overflow-hidden bg-background md:flex-row">
-      <EpochSelectionSection
-        epochs={epochs}
-        selectedEpoch={selectedEpoch}
-        expandedEpochs={expandedEpochs}
-        onEpochSelect={handleEpochSelect}
-      />
-      <AnimatePresence mode="wait">
-        {selectedEpoch && (
-          <ActivitySelectionSection
-            key={selectedEpoch}
-            epoch={selectedEpoch}
-            selectedActivity={selectedActivity}
-            onActivitySelect={handleActivitySelect}
-          />
+      {/* Toggle button to show sidebars when hidden */}
+      {sidebarsHidden && (
+        <button
+          onClick={() => setSidebarsHidden(false)}
+          className="absolute left-2 top-2 z-30 flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card/80 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Show sidebars"
+        >
+          <PanelLeftOpen size={16} />
+        </button>
+      )}
+
+      <div
+        className={cn(
+          "flex flex-col md:flex-row shrink-0 overflow-hidden",
+          "transition-[max-height,max-width,opacity] duration-500 ease-in-out",
+          sidebarsHidden
+            ? "max-h-0 md:max-h-full max-w-full md:max-w-0 opacity-0 pointer-events-none"
+            : "max-h-[400px] md:max-h-full max-w-full md:max-w-[600px] opacity-100"
         )}
-      </AnimatePresence>
+      >
+        <EpochSelectionSection
+          epochs={epochs}
+          selectedEpoch={selectedEpoch}
+          expandedEpochs={expandedEpochs}
+          onEpochSelect={handleEpochSelect}
+        />
+        <AnimatePresence mode="wait">
+          {selectedEpoch && (
+            <ActivitySelectionSection
+              key={selectedEpoch}
+              epoch={selectedEpoch}
+              selectedActivity={selectedActivity}
+              onActivitySelect={handleActivitySelect}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+
       <AnimatePresence mode="wait">
         {selectedActivity && selectedEpoch && (
           <DisplaySection

@@ -37,7 +37,7 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
     >
       <div className="border-b border-border bg-muted/30 px-4 py-3">
         <div className="flex items-center justify-between gap-4">
-          <div>
+          <div className="ml-7">
             {activity === "Orderbook" ? (
               <Tabs value={orderbookAsset} onValueChange={(v) => setOrderbookAsset(v as OrderbookAsset)}>
                 Orderbook - 
