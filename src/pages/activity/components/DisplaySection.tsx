@@ -9,6 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useQubicConnect } from "@/components/connect/QubicConnectContext";
 import { cn } from "@/utils";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const ORDERBOOK_ASSETS = ["QDOGE", "QTREAT"] as const;
+type OrderbookAsset = (typeof ORDERBOOK_ASSETS)[number];
 
 interface DisplaySectionProps {
   epoch: number;
@@ -17,6 +21,7 @@ interface DisplaySectionProps {
 
 const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [orderbookAsset, setOrderbookAsset] = useState<OrderbookAsset>("QDOGE");
   const { wallet } = useQubicConnect();
   const connectedWallet = wallet?.publicKey || null;
 
@@ -33,10 +38,20 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
       <div className="border-b border-border bg-muted/30 px-4 py-3">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="text-sm md:text-base font-semibold text-foreground">
-              {activity === "Orderbook" ? "Orderbook — QDOGE" : `${activity} Details`}
-            </h2>
-            <p className="text-xs text-muted-foreground">Epoch {epoch}</p>
+            {activity === "Orderbook" ? (
+              <Tabs value={orderbookAsset} onValueChange={(v) => setOrderbookAsset(v as OrderbookAsset)}>
+                Orderbook - 
+                <TabsList>
+                  <TabsTrigger value="QDOGE">QDOGE</TabsTrigger>
+                  <TabsTrigger value="QTREAT">QTREAT</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            ) : (
+              <h2 className="text-sm md:text-base font-semibold text-foreground">
+                {`${activity} Details`}
+              </h2>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">Epoch {epoch}</p>
           </div>
           {(activity === "Trades" || activity === "Transfers" || activity === "Airdrop") && (
             <div className="relative w-full max-w-xs">
@@ -70,7 +85,7 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
       >
         <div className={activity === "Orderbook" ? "h-full min-h-0" : "mx-auto max-w-6xl h-full"}>
           {activity === "Orderbook" ? (
-            <OrderbookCockpit />
+            <OrderbookCockpit asset={orderbookAsset} />
           ) : activity === "Trades" ? (
             <EpochTrades epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
           ) : activity === "Transfers" ? (

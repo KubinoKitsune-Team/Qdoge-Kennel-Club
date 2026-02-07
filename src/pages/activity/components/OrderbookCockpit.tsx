@@ -22,7 +22,9 @@ type Level = {
   depthPct: number; // 0..1
 };
 
-const ASSET = "QDOGE";
+const ASSETS = ["QDOGE", "QTREAT"] as const;
+type Asset = (typeof ASSETS)[number];
+const DEFAULT_ASSET: Asset = "QDOGE";
 const DEFAULT_LEVELS_PER_SIDE = 24;
 
 function groupToLevels(side: Side, orders: AssetOrder[], maxLevels: number): Level[] {
@@ -84,10 +86,15 @@ function useMediaQuery(query: string) {
   return matches;
 }
 
-export default function OrderbookCockpit() {
+interface OrderbookCockpitProps {
+  asset?: Asset;
+}
+
+export default function OrderbookCockpit({ asset: assetProp }: OrderbookCockpitProps) {
   const { placeOrder } = usePlaceOrder();
 
-  const issuer = ISSUER.get(ASSET) ?? "";
+  const asset = assetProp ?? DEFAULT_ASSET;
+  const issuer = ISSUER.get(asset) ?? "";
 
   const [asksRaw, setAsksRaw] = useState<AssetOrder[]>([]);
   const [bidsRaw, setBidsRaw] = useState<AssetOrder[]>([]);
@@ -122,7 +129,7 @@ export default function OrderbookCockpit() {
 
     const fetchOnce = async () => {
       try {
-        const [asks, bids] = await Promise.all([fetchAssetAskOrders(issuer, ASSET), fetchAssetBidOrders(issuer, ASSET)]);
+        const [asks, bids] = await Promise.all([fetchAssetAskOrders(issuer, asset), fetchAssetBidOrders(issuer, asset)]);
         if (cancelled) return;
         setAsksRaw(asks ?? []);
         setBidsRaw(bids ?? []);
@@ -163,7 +170,7 @@ export default function OrderbookCockpit() {
     setTicketSide(side === "ask" ? "buy" : "sell");
     setSelectedPrice(price);
     setSelectedSide(side);
-    setPriceInput(String(Math.trunc(price)));
+    setPriceInput(Math.trunc(price).toLocaleString());
     setHoveredPrice(null);
     setHoveredSide(null);
 
@@ -177,8 +184,8 @@ export default function OrderbookCockpit() {
   const previewPriceText = hoveredPrice != null ? formatInt(hoveredPrice) : null;
   const selectedPriceText = selectedPrice != null ? formatInt(selectedPrice) : null;
 
-  const parsedPrice = Number(priceInput);
-  const parsedAmount = Number(amountInput);
+  const parsedPrice = Number(priceInput.replace(/,/g, ""));
+  const parsedAmount = Number(amountInput.replace(/,/g, ""));
   const total = Number.isFinite(parsedPrice) && Number.isFinite(parsedAmount) && parsedPrice > 0 && parsedAmount > 0 ? parsedPrice * parsedAmount : null;
 
   const handleSubmit = async () => {
@@ -193,7 +200,7 @@ export default function OrderbookCockpit() {
 
     setIsSubmitting(true);
     try {
-      const ok = await placeOrder(ASSET, ticketSide === "buy" ? "buy" : "sell", parsedPrice, parsedAmount, true);
+      const ok = await placeOrder(asset, ticketSide === "buy" ? "buy" : "sell", parsedPrice, parsedAmount, true);
       if (ok) {
         setAmountInput("");
         if (!isDesktop) setTicketOpen(false);
@@ -259,11 +266,14 @@ export default function OrderbookCockpit() {
       <div className="flex flex-col gap-3">
         <div className="relative">
           <Input
-            type="number"
+            type="text"
             inputMode="numeric"
             placeholder="Limit price"
             value={priceInput}
-            onChange={(e) => setPriceInput(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "");
+              setPriceInput(v ? Number(v).toLocaleString() : "");
+            }}
             className={cn(
               "pr-14 font-mono",
               commitPulse && (ticketSide === "buy" ? "ring-2 ring-chart-2" : "ring-2 ring-chart-1"),
@@ -275,15 +285,18 @@ export default function OrderbookCockpit() {
 
         <div className="relative">
           <Input
-            type="number"
+            type="text"
             inputMode="numeric"
             placeholder="Amount"
             value={amountInput}
-            onChange={(e) => setAmountInput(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value.replace(/\D/g, "");
+              setAmountInput(v ? Number(v).toLocaleString() : "");
+            }}
             className="pr-16 font-mono"
-            aria-label={`Amount in ${ASSET}`}
+            aria-label={`Amount in ${asset}`}
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{ASSET}</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{asset}</span>
         </div>
 
         <div className="flex items-center justify-between text-xs">
@@ -296,9 +309,9 @@ export default function OrderbookCockpit() {
           disabled={isSubmitting}
           variant={ticketSide === "buy" ? "default" : "destructive"}
           className="w-full"
-          aria-label={`${ticketSide === "buy" ? "Buy" : "Sell"} ${ASSET}`}
+          aria-label={`${ticketSide === "buy" ? "Buy" : "Sell"} ${asset}`}
         >
-          {isSubmitting ? "Submitting..." : `${ticketSide === "buy" ? "Buy" : "Sell"} ${ASSET}`}
+          {isSubmitting ? "Submitting..." : `${ticketSide === "buy" ? "Buy" : "Sell"} ${asset}`}
         </Button>
       </div>
     </div>
@@ -311,6 +324,31 @@ export default function OrderbookCockpit() {
   }, [asks, bids]);
 
   const rowRefMap = useRef<Map<string, HTMLButtonElement | null>>(new Map());
+  const asksScrollRef = useRef<HTMLDivElement | null>(null);
+  const hasScrolledAsksRef = useRef(false);
+
+  // Callback ref to scroll to bottom when the asks container is mounted
+  const setAsksScrollRef = (el: HTMLDivElement | null) => {
+    asksScrollRef.current = el;
+    if (el && !hasScrolledAsksRef.current && asks.length > 0) {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+        hasScrolledAsksRef.current = true;
+      });
+    }
+  };
+
+  // Also scroll when asks data first loads (in case ref was already attached)
+  useEffect(() => {
+    if (!loadingBook && asks.length > 0 && !hasScrolledAsksRef.current && asksScrollRef.current) {
+      requestAnimationFrame(() => {
+        if (asksScrollRef.current) {
+          asksScrollRef.current.scrollTop = asksScrollRef.current.scrollHeight;
+          hasScrolledAsksRef.current = true;
+        }
+      });
+    }
+  }, [loadingBook, asks.length]);
 
   const focusRowByKey = (key: string) => {
     const el = rowRefMap.current.get(key);
@@ -354,7 +392,7 @@ export default function OrderbookCockpit() {
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <p className="truncate text-sm font-semibold text-foreground">Orderbook</p>
-            <span className="text-xs text-muted-foreground">{ASSET}</span>
+            <span className="text-xs text-muted-foreground">{asset}</span>
           </div>
           <p className="text-[11px] text-muted-foreground">Liquidity Lens: hover/focus a row to sync chart + ticket</p>
         </div>
@@ -367,7 +405,7 @@ export default function OrderbookCockpit() {
             </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader>
-                <DrawerTitle>Trade {ASSET}</DrawerTitle>
+                <DrawerTitle>Trade {asset}</DrawerTitle>
               </DrawerHeader>
               <div className="px-4 pb-6">{ticket}</div>
             </DrawerContent>
@@ -395,9 +433,9 @@ export default function OrderbookCockpit() {
               <span className="text-[11px] text-muted-foreground">Best: {bestAsk != null ? formatInt(bestAsk) : "---"}</span>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+            <div ref={setAsksScrollRef} className="min-h-0 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
               <div className="divide-y divide-border/40">
-                {asks.map((lvl) => {
+                {[...asks].reverse().map((lvl) => {
                   const isHovered = hoveredPrice === lvl.price && hoveredSide === "ask";
                   const isSelected = selectedPrice === lvl.price && selectedSide === "ask";
                   return (
@@ -553,7 +591,7 @@ export default function OrderbookCockpit() {
         <Chart
           className="h-full w-full"
           issuer={issuer}
-          asset={ASSET}
+          asset={asset}
           lensPrice={lensPrice ?? undefined}
           selectedPrice={selectedPrice ?? undefined}
           showChartTypeControls={true}
@@ -580,7 +618,7 @@ export default function OrderbookCockpit() {
       <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border border-border bg-card/40 p-6 text-center">
         <div>
           <p className="text-sm font-semibold text-foreground">Orderbook unavailable</p>
-          <p className="text-xs text-muted-foreground">Issuer for {ASSET} is not configured.</p>
+          <p className="text-xs text-muted-foreground">Issuer for {asset} is not configured.</p>
         </div>
       </div>
     );
@@ -617,7 +655,7 @@ export default function OrderbookCockpit() {
           <Tabs value={mobileTab} onValueChange={(v) => setMobileTab(v as "ladder" | "chart")}>
             <TabsList>
               <TabsTrigger value="ladder" aria-label="Show ladder">
-                Ladder
+                OrderList {/* Ladder */}
               </TabsTrigger>
               <TabsTrigger value="chart" aria-label="Show chart">
                 Chart
@@ -633,7 +671,7 @@ export default function OrderbookCockpit() {
             </DrawerTrigger>
             <DrawerContent>
               <DrawerHeader>
-                <DrawerTitle>Trade {ASSET}</DrawerTitle>
+                <DrawerTitle>Trade {asset}</DrawerTitle>
               </DrawerHeader>
               <div className="px-4 pb-6">{ticket}</div>
             </DrawerContent>
