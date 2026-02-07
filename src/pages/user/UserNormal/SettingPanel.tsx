@@ -39,8 +39,8 @@ const SettingPanel: React.FC = () => {
         </div>
         <Slider
           id="tickOffset"
-          min={5}
-          max={15}
+          min={15}
+          max={30}
           step={1}
           value={[settings.tickOffset]}
           onValueChange={(value) => setSettings({ tickOffset: value[0] })}
