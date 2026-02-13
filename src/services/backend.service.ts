@@ -77,6 +77,27 @@ export interface EpochTransfersResponse {
   transfers: EpochTransfer[];
 }
 
+export interface QTreatzAssetBalance {
+  asset_name: string;
+  balance: string;
+}
+
+export interface QTreatzOverview {
+  updated_at: string;
+  qtreatz_wallet: {
+    wallet_id: string;
+    qubic_balance: string;
+    assets: QTreatzAssetBalance[];
+  };
+  qdoge_wallet: {
+    wallet_id: string;
+    qtreat_asset_balance: string;
+  };
+  qtreat_total_supply: string;
+  circulating_qtreat: string;
+  qubic_per_circulating_qtreat: string | null;
+}
+
 // Fetch all epochs
 export const fetchEpochs = async (): Promise<Epoch[]> => {
   const response = await fetch(`${BACKEND_API_URL}/epochs`);
@@ -145,6 +166,14 @@ export const fetchEpochTransfers = async (epochNum: number): Promise<EpochTransf
   }
   const data: EpochTransfersResponse = await response.json();
   return data.transfers;
+};
+
+export const fetchQTreatzOverview = async (): Promise<QTreatzOverview> => {
+  const response = await fetch(`${BACKEND_API_URL}/qtreatz/overview`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch QTREATZ overview: ${response.statusText}`);
+  }
+  return response.json();
 };
 
 export interface UserInfo {

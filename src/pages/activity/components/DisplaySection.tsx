@@ -5,6 +5,7 @@ import EpochTrades from "./EpochTrades";
 import EpochTransfers from "./EpochTransfers";
 import AirdropResults from "./AirdropResults";
 import OrderbookCockpit from "./OrderbookCockpit";
+import QTreatzOverview from "./QTreatzOverview";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useQubicConnect } from "@/components/connect/QubicConnectContext";
@@ -95,6 +96,8 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
             <EpochTransfers epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
           ) : activity === "Airdrop" ? (
             <AirdropResults epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+          ) : activity === "QTREATZ" ? (
+            <QTreatzOverview />
           ) : (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
               <div className="rounded-lg border-2 border-dashed border-border p-6 md:p-10 bg-muted/10 w-full max-w-2xl">
