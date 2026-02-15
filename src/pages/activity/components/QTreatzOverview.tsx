@@ -20,7 +20,7 @@ function shortWallet(wallet: string): string {
 
 export default function QTreatzOverview() {
   const overview = useAtomValue(qtreatzOverviewAtom);
-  const updatedAt = overview ? new Date(overview.updated_at).toLocaleString() : null;
+  const updatedAt = overview ? new Date(overview.updated_at).toLocaleString("en-US", { timeZone: "UTC" }) : null;
 
   if (!overview) {
     return (
@@ -79,7 +79,7 @@ export default function QTreatzOverview() {
           <CardContent>
             <p className="text-2xl font-semibold">
               {overview.qubic_per_circulating_qtreat
-                ? Math.floor(Number(overview.qubic_per_circulating_qtreat))
+                ? formatAmount(String(Math.floor(Number(overview.qubic_per_circulating_qtreat))))
                 : "---"}
             </p>
             <p className="text-xs text-muted-foreground mt-1">Qubic balance divided by circulating QTREAT.</p>
