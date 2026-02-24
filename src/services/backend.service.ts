@@ -31,6 +31,12 @@ export interface EpochTradesResponse {
   trades: EpochTrade[];
 }
 
+export interface EpochRangeTradesResponse {
+  start_epoch: number;
+  end_epoch: number;
+  trades: EpochTrade[];
+}
+
 export interface AirdropResult {
   rank: number;
   wallet_id: string;
@@ -75,6 +81,34 @@ export interface EpochTransfer {
 export interface EpochTransfersResponse {
   epoch_num: number;
   transfers: EpochTransfer[];
+}
+
+export interface EpochRangeTransfersResponse {
+  start_epoch: number;
+  end_epoch: number;
+  transfers: EpochTransfer[];
+}
+
+export interface MonthlyAirdropResult {
+  rank: number;
+  wallet_id: string;
+  is_zealy_registered: boolean;
+  buy_amount: string;
+  token_amount: string;
+  airdrop_amount: string;
+}
+
+export interface MonthlyAirdropPreviewResponse {
+  start_epoch: number;
+  end_epoch: number;
+  period: string;
+  epochs_included?: number[];
+  window_complete?: boolean;
+  total_airdrop: string;
+  distributed: number;
+  is_ongoing: boolean;
+  preview: boolean;
+  results: MonthlyAirdropResult[];
 }
 
 export interface QTreatzAssetBalance {
@@ -138,6 +172,15 @@ export const fetchEpochTrades = async (epochNum: number): Promise<EpochTrade[]> 
   return data.trades;
 };
 
+export const fetchEpochRangeTrades = async (startEpoch: number, endEpoch: number): Promise<EpochTrade[]> => {
+  const response = await fetch(`${BACKEND_API_URL}/epoch-ranges/${startEpoch}/${endEpoch}/trades`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch trades for epoch range ${startEpoch}~${endEpoch}: ${response.statusText}`);
+  }
+  const data: EpochRangeTradesResponse = await response.json();
+  return data.trades;
+};
+
 // Fetch airdrop results for a specific epoch
 export const fetchAirdropResults = async (epochNum: number): Promise<AirdropResult[]> => {
   const response = await fetch(`${BACKEND_API_URL}/epochs/${epochNum}/airdrop-results`);
@@ -166,6 +209,25 @@ export const fetchEpochTransfers = async (epochNum: number): Promise<EpochTransf
   }
   const data: EpochTransfersResponse = await response.json();
   return data.transfers;
+};
+
+export const fetchEpochRangeTransfers = async (startEpoch: number, endEpoch: number): Promise<EpochTransfer[]> => {
+  const response = await fetch(`${BACKEND_API_URL}/epoch-ranges/${startEpoch}/${endEpoch}/transfers`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch transfers for epoch range ${startEpoch}~${endEpoch}: ${response.statusText}`);
+  }
+  const data: EpochRangeTransfersResponse = await response.json();
+  return data.transfers;
+};
+
+export const fetchMonthlyAirdropPreview = async (startEpoch: number, endEpoch: number): Promise<MonthlyAirdropPreviewResponse> => {
+  const response = await fetch(`${BACKEND_API_URL}/epoch-ranges/${startEpoch}/${endEpoch}/monthly-airdrop-preview`);
+  if (!response.ok) {
+    const detail = await response.json().catch(() => null);
+    const msg = typeof detail?.detail === "string" ? detail.detail : response.statusText;
+    throw new Error(`Failed to fetch monthly airdrop preview for ${startEpoch}~${endEpoch}: ${msg}`);
+  }
+  return response.json();
 };
 
 export const fetchQTreatzOverview = async (): Promise<QTreatzOverview> => {

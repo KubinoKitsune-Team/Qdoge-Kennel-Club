@@ -2,15 +2,25 @@ import { motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/utils";
 
+export type EpochSelectionItem =
+  | { kind: "epoch"; epoch: number }
+  | { kind: "range"; startEpoch: number; endEpoch: number };
+
 interface EpochSelectionSectionProps {
-  epochs: number[];
-  selectedEpoch: number | null;
-  expandedEpochs: Set<number>;
-  onEpochSelect: (epoch: number) => void;
+  items: EpochSelectionItem[];
+  selectedId: string | null;
+  expandedIds: Set<string>;
+  onSelect: (item: EpochSelectionItem) => void;
 }
 
+const getItemId = (item: EpochSelectionItem) =>
+  item.kind === "epoch" ? `e:${item.epoch}` : `r:${item.startEpoch}~${item.endEpoch}`;
+
+const getItemLabel = (item: EpochSelectionItem) =>
+  item.kind === "epoch" ? `${item.epoch}` : `${item.startEpoch}~${item.endEpoch}`;
+
 const EpochSelectionSection: React.FC<EpochSelectionSectionProps> = ({
-  epochs, selectedEpoch, expandedEpochs, onEpochSelect,
+  items, selectedId, expandedIds, onSelect,
 }) => (
   <motion.section
     initial={{ opacity: 0, x: -20 }}
@@ -23,13 +33,15 @@ const EpochSelectionSection: React.FC<EpochSelectionSectionProps> = ({
     </div>
     <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent max-h-[200px] md:max-h-none">
       <div className="grid grid-cols-3 xs:grid-cols-4 md:flex md:flex-col gap-2 p-3">
-        {epochs.map((epoch) => {
-          const isSelected = selectedEpoch === epoch;
-          const isExpanded = expandedEpochs.has(epoch);
+        {items.map((item) => {
+          const id = getItemId(item);
+          const label = getItemLabel(item);
+          const isSelected = selectedId === id;
+          const isExpanded = expandedIds.has(id);
           return (
             <motion.button
-              key={epoch}
-              onClick={() => onEpochSelect(epoch)}
+              key={id}
+              onClick={() => onSelect(item)}
               className={cn(
                 "group relative flex items-center justify-center md:justify-start gap-2 rounded-md px-3 py-2.5 md:py-2 transition-all duration-200 hover:bg-muted/40",
                 isSelected
@@ -45,7 +57,7 @@ const EpochSelectionSection: React.FC<EpochSelectionSectionProps> = ({
                   <Plus size={14} className="text-muted-foreground group-hover:text-foreground transition-colors" />
                 )}
               </div>
-              <span className="font-mono text-sm font-semibold">{epoch}</span>
+              <span className="font-mono text-sm font-semibold">{label}</span>
             </motion.button>
           );
         })}

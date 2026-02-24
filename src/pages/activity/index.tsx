@@ -11,14 +11,51 @@ import { useQubicConnect } from "@/components/connect/QubicConnectContext";
 import { Button } from "@/components/ui/button";
 import { Wallet, PanelLeftOpen } from "lucide-react";
 import { cn } from "@/utils";
+import type { EpochSelectionItem } from "./components/EpochSelectionSection";
+
+type SelectedPeriod =
+  | { kind: "epoch"; epoch: number }
+  | { kind: "range"; startEpoch: number; endEpoch: number };
+
+const getPeriodId = (p: SelectedPeriod) =>
+  p.kind === "epoch" ? `e:${p.epoch}` : `r:${p.startEpoch}~${p.endEpoch}`;
+
+const FIRST_EPOCH = 197;
+const FIRST_MONTHLY_START_EPOCH = 198;
+
+const buildEpochSelectionItems = (epochs: number[]): EpochSelectionItem[] => {
+  const available = new Set(epochs);
+  const maxEpoch = epochs.length > 0 ? Math.max(...epochs) : FIRST_MONTHLY_START_EPOCH + 3;
+
+  const items: EpochSelectionItem[] = [];
+
+  // Single epoch 197 first (start epoch is 197; monthly airdrop starts at 198).
+  if (available.has(FIRST_EPOCH)) {
+    items.push({ kind: "epoch", epoch: FIRST_EPOCH });
+  }
+
+  // 198, 199, 200, 201, 198~201, 202, 203, 204, 205, 202~205, ... Always show monthly range tabs
+  // so "Monthly Airdrop" is visible even if backend hasn't returned all 4 epochs yet.
+  for (let start = FIRST_MONTHLY_START_EPOCH; start <= maxEpoch; start += 4) {
+    const block = [start, start + 1, start + 2, start + 3].filter((e) => available.has(e));
+    for (const e of block) items.push({ kind: "epoch", epoch: e });
+    // Always show range tab for this 4-epoch window (198~201, 202~205, ...) so user can open Monthly Airdrop.
+    items.push({ kind: "range", startEpoch: start, endEpoch: start + 3 });
+  }
+
+  if (items.length === 0) {
+    return [...epochs].sort((a, b) => b - a).map((e) => ({ kind: "epoch", epoch: e }));
+  }
+  return items;
+};
 
 const Activity: React.FC = () => {
   const { connected, toggleConnectModal } = useQubicConnect();
   const [tickInfo] = useAtom(tickInfoAtom);
-  const [selectedEpoch, setSelectedEpoch] = useState<number | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<SelectedPeriod | null>(null);
   const [selectedActivity, setSelectedActivity] = useState<ActivityType | null>(null);
   const [sidebarsHidden, setSidebarsHidden] = useState(false);
-  const [expandedEpochs, setExpandedEpochs] = useState<Set<number>>(new Set());
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [backendEpochs, setBackendEpochs] = useState<Epoch[]>([]);
   const [isLoadingEpochs, setIsLoadingEpochs] = useState(true);
 
@@ -54,14 +91,24 @@ const Activity: React.FC = () => {
     return epochList;
   }, [backendEpochs, currentEpoch]);
 
-  const handleEpochSelect = (epoch: number) => {
-    if (selectedEpoch === epoch) {
-      setExpandedEpochs(new Set());
-      setSelectedEpoch(null);
+  const epochSelectionItems = useMemo(() => buildEpochSelectionItems(epochs), [epochs]);
+
+  const selectedId = useMemo(() => (selectedPeriod ? getPeriodId(selectedPeriod) : null), [selectedPeriod]);
+
+  const handlePeriodSelect = (item: EpochSelectionItem) => {
+    const next: SelectedPeriod =
+      item.kind === "epoch"
+        ? { kind: "epoch", epoch: item.epoch }
+        : { kind: "range", startEpoch: item.startEpoch, endEpoch: item.endEpoch };
+
+    const nextId = getPeriodId(next);
+    if (selectedId === nextId) {
+      setExpandedIds(new Set());
+      setSelectedPeriod(null);
       setSelectedActivity(null);
     } else {
-      setExpandedEpochs(new Set([epoch]));
-      setSelectedEpoch(epoch);
+      setExpandedIds(new Set([nextId]));
+      setSelectedPeriod(next);
       setSelectedActivity(null);
     }
   };
@@ -122,16 +169,16 @@ const Activity: React.FC = () => {
         )}
       >
         <EpochSelectionSection
-          epochs={epochs}
-          selectedEpoch={selectedEpoch}
-          expandedEpochs={expandedEpochs}
-          onEpochSelect={handleEpochSelect}
+          items={epochSelectionItems}
+          selectedId={selectedId}
+          expandedIds={expandedIds}
+          onSelect={handlePeriodSelect}
         />
         <AnimatePresence mode="wait">
-          {selectedEpoch && (
+          {selectedPeriod && (
             <ActivitySelectionSection
-              key={selectedEpoch}
-              epoch={selectedEpoch}
+              key={selectedId || "activity"}
+              period={selectedPeriod}
               selectedActivity={selectedActivity}
               onActivitySelect={handleActivitySelect}
             />
@@ -140,10 +187,10 @@ const Activity: React.FC = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        {selectedActivity && selectedEpoch && (
+        {selectedActivity && selectedPeriod && (
           <DisplaySection
-            key={`${selectedEpoch}-${selectedActivity}`}
-            epoch={selectedEpoch}
+            key={`${selectedId}-${selectedActivity}`}
+            period={selectedPeriod}
             activity={selectedActivity}
           />
         )}
