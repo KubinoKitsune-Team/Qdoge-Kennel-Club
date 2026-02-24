@@ -165,12 +165,22 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "",
         </div>
       </div>
 
+      {/* Weekly Airdrop Requirements */}
+      <div className="rounded-md border border-primary/30 bg-primary/5 p-3 text-sm text-muted-foreground">
+        <p className="font-semibold text-foreground mb-2">Weekly Airdrop Requirements</p>
+        <ul className="list-disc list-inside space-y-1 text-xs">
+          <li>Per-epoch: <strong>trade_result</strong> (buy − sell) &gt; threshold</li>
+          <li>Current epoch: <strong>total_balance</strong> (buy − sell − send_transfer) &gt; threshold</li>
+          <li>Previous epoch: <strong>total_balance</strong> &gt; threshold</li>
+          <li>Zealy registered wallets only</li>
+          <li>Top <strong>100</strong> by ranking; equal share of epoch total airdrop (remainder to rank #1)</li>
+        </ul>
+      </div>
+
       {/* Live Preview Disclaimer */}
       {isPreview && (
         <div className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-500">
-          ⚠️ This is a live preview and does not reflect the final list. Changes may be made before the final distribution. <br />
-          ✅ - Zealy Registered &nbsp;|&nbsp;
-          Eligibility: trade_result &gt; threshold, total_balance (current) &gt; threshold, total_balance (prev epoch) ≥ 0
+          ⚠️ This is a live preview and does not reflect the final list. Changes may be made before the final distribution. &nbsp;✅ = Zealy Registered
         </div>
       )}
 

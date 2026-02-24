@@ -3,16 +3,22 @@ import { ActivityType } from "../types";
 import { cn } from "@/utils";
 
 interface ActivitySelectionSectionProps {
-  epoch: number;
+  period: { kind: "epoch"; epoch: number } | { kind: "range"; startEpoch: number; endEpoch: number };
   selectedActivity: ActivityType | null;
   onActivitySelect: (activity: ActivityType) => void;
 }
 
 const ACTIVITY_TYPES: ActivityType[] = ["Orderbook", "Trades", "Transfers", "Airdrop","QTREATZ","NFTS"];
+const RANGE_ACTIVITY_TYPES: ActivityType[] = ["Orderbook", "Trades", "Transfers", "Airdrop"];
 
 const ActivitySelectionSection: React.FC<ActivitySelectionSectionProps> = ({
-  epoch, selectedActivity, onActivitySelect,
-}) => (
+  period, selectedActivity, onActivitySelect,
+}) => {
+  const isRange = period.kind === "range";
+  const activityTypes = isRange ? RANGE_ACTIVITY_TYPES : ACTIVITY_TYPES;
+  const badge = isRange ? `${period.startEpoch}~${period.endEpoch}` : `${period.epoch}`;
+
+  return (
   <motion.section
     initial={{ opacity: 0, x: -50 }}
     animate={{ opacity: 1, x: 0 }}
@@ -25,7 +31,7 @@ const ActivitySelectionSection: React.FC<ActivitySelectionSectionProps> = ({
     </div>
     <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
       <div className="flex flex-row md:flex-col gap-2 p-3 overflow-x-auto md:overflow-x-visible">
-        {ACTIVITY_TYPES.map((activity) => {
+        {activityTypes.map((activity) => {
           const isSelected = selectedActivity === activity;
           return (
             <motion.button
@@ -43,7 +49,7 @@ const ActivitySelectionSection: React.FC<ActivitySelectionSectionProps> = ({
               <div className="absolute left-0 top-0 z-10 overflow-hidden">
                 <div className="relative w-[28px] h-[28px] md:w-[32px] md:h-[32px]" style={{ clipPath: "polygon(0 0, 100% 0, 0 100%)" }}>
                   <div className="absolute inset-0 bg-primary" />
-                  <span className="absolute left-[3px] top-[2px] text-[8px] md:text-[9px] font-bold text-primary-foreground">{epoch}</span>
+                  <span className="absolute left-[3px] top-[2px] text-[8px] md:text-[9px] font-bold text-primary-foreground">{badge}</span>
                 </div>
               </div>
               <span className="text-xs md:text-sm font-semibold uppercase tracking-wider">{activity}</span>
@@ -53,6 +59,7 @@ const ActivitySelectionSection: React.FC<ActivitySelectionSectionProps> = ({
       </div>
     </div>
   </motion.section>
-);
+  );
+};
 
 export default ActivitySelectionSection;

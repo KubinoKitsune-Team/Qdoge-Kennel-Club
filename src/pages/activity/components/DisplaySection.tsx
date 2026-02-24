@@ -4,6 +4,9 @@ import { ActivityType } from "../types";
 import EpochTrades from "./EpochTrades";
 import EpochTransfers from "./EpochTransfers";
 import AirdropResults from "./AirdropResults";
+import EpochRangeTrades from "./EpochRangeTrades";
+import EpochRangeTransfers from "./EpochRangeTransfers";
+import MonthlyAirdropRangeResults from "./MonthlyAirdropRangeResults";
 import OrderbookCockpit from "./OrderbookCockpit";
 import QTreatzOverview from "./QTreatzOverview";
 import { Input } from "@/components/ui/input";
@@ -16,15 +19,16 @@ const ORDERBOOK_ASSETS = ["QDOGE", "QTREAT"] as const;
 type OrderbookAsset = (typeof ORDERBOOK_ASSETS)[number];
 
 interface DisplaySectionProps {
-  epoch: number;
+  period: { kind: "epoch"; epoch: number } | { kind: "range"; startEpoch: number; endEpoch: number };
   activity: ActivityType;
 }
 
-const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
+const DisplaySection: React.FC<DisplaySectionProps> = ({ period, activity }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [orderbookAsset, setOrderbookAsset] = useState<OrderbookAsset>("QDOGE");
   const { wallet } = useQubicConnect();
   const connectedWallet = wallet?.publicKey || null;
+  const periodLabel = period.kind === "epoch" ? `Epoch ${period.epoch}` : `${period.startEpoch}~${period.endEpoch}`;
 
   const handleClearSearch = () => setSearchTerm("");
 
@@ -55,7 +59,7 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
                 {`${activity} Details`}
               </h2>
             )}
-            <p className="text-xs text-muted-foreground mt-1">Epoch {epoch}</p>
+            <p className="text-xs text-muted-foreground mt-1">{periodLabel}</p>
           </div>
           {(activity === "Trades" || activity === "Transfers" || activity === "Airdrop") && (
             <div className="relative w-full max-w-xs">
@@ -91,18 +95,30 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ epoch, activity }) => {
           {activity === "Orderbook" ? (
             <OrderbookCockpit key={orderbookAsset} asset={orderbookAsset} />
           ) : activity === "Trades" ? (
-            <EpochTrades epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            period.kind === "epoch" ? (
+              <EpochTrades epoch={period.epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            ) : (
+              <EpochRangeTrades startEpoch={period.startEpoch} endEpoch={period.endEpoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            )
           ) : activity === "Transfers" ? (
-            <EpochTransfers epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            period.kind === "epoch" ? (
+              <EpochTransfers epoch={period.epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            ) : (
+              <EpochRangeTransfers startEpoch={period.startEpoch} endEpoch={period.endEpoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            )
           ) : activity === "Airdrop" ? (
-            <AirdropResults epoch={epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            period.kind === "epoch" ? (
+              <AirdropResults epoch={period.epoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            ) : (
+              <MonthlyAirdropRangeResults startEpoch={period.startEpoch} endEpoch={period.endEpoch} searchTerm={searchTerm} connectedWallet={connectedWallet} />
+            )
           ) : activity === "QTREATZ" ? (
             <QTreatzOverview />
           ) : (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
               <div className="rounded-lg border-2 border-dashed border-border p-6 md:p-10 bg-muted/10 w-full max-w-2xl">
                 <h3 className="text-lg md:text-xl font-semibold text-foreground mb-2">{activity} Activity</h3>
-                <p className="text-muted-foreground mb-2">Epoch {epoch}</p>
+                <p className="text-muted-foreground mb-2">{periodLabel}</p>
                 <p className="text-sm text-muted-foreground">{activity} details will be displayed here</p>
                 <p className="text-xs text-muted-foreground mt-3 opacity-70">Coming soon</p>
               </div>
