@@ -171,7 +171,7 @@ const AirdropResults: React.FC<AirdropResultsProps> = ({ epoch, searchTerm = "",
         <ul className="list-disc list-inside space-y-1 text-xs">
           <li>Per-epoch: <strong>trade_result</strong> (buy − sell) &gt; threshold</li>
           <li>Current epoch: <strong>total_balance</strong> (buy − sell − send_transfer) &gt; threshold</li>
-          <li>Previous epoch: <strong>total_balance</strong> &gt; threshold</li>
+          <li>Previous epoch: <strong>total_balance</strong> &gt;= 0</li>
           <li>Zealy registered wallets only</li>
           <li>Top <strong>100</strong> by ranking; equal share of epoch total airdrop (remainder to rank #1)</li>
         </ul>

@@ -99,7 +99,7 @@ const MonthlyAirdropRangeResults: React.FC<MonthlyAirdropRangeResultsProps> = ({
       <p className="font-semibold text-foreground mb-2">Monthly Airdrop Requirements</p>
       <ul className="list-disc list-inside space-y-1 text-xs">
         <li>Window: 4 consecutive epochs ({startEpoch}~{endEpoch})</li>
-        <li>In <strong>each</strong> of the 4 epochs: <strong>buy only</strong> — no sells, no sending tokens to other users (receiving is allowed)</li>
+        <li>In <strong>each</strong> of the 4 epochs: <strong>buy_amount</strong> &gt; epoch threshold, <strong>no sells</strong>, and <strong>no sending transfers</strong> (receiving is allowed)</li>
         <li>Ranking: by total buy amount across the 4 epochs (descending)</li>
         <li>Top <strong>100</strong> wallets qualify</li>
         <li>Total airdrop: <strong>25,000,000</strong> — split equally among winners (remainder to rank #1)</li>
