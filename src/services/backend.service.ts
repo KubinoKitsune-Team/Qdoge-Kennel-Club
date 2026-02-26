@@ -132,6 +132,64 @@ export interface QTreatzOverview {
   qubic_per_circulating_qtreat: string | null;
 }
 
+export interface QubicBayMetadata {
+  trait_type: string;
+  value: string;
+}
+
+export interface QubicBayNFT {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl: string;
+  uri: string;
+  metadata: QubicBayMetadata[];
+  creatorId: string;
+  ownerId: string;
+  collectionId: number;
+  royalty: number;
+  lastPrice: string;
+  totalTrades: number;
+  totalTradeVolume: string;
+  createdAt: string;
+  updatedAt: string;
+  status: string;
+}
+
+export interface QubicBayUser {
+  id: string;
+  username: string | null;
+  admin: boolean;
+  bio: string | null;
+  avatarUrl: string | null;
+  bannerUrl: string | null;
+  socialLinks: Record<string, string | null> | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface QubicBayListing {
+  id: number;
+  nftId: number;
+  sellerId: string;
+  price: string;
+  fee: string | null;
+  currency: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  nft: QubicBayNFT;
+  seller: QubicBayUser;
+}
+
+export interface QubicBayListingsResponse {
+  results: QubicBayListing[];
+  page: number;
+  limit: number;
+  totalPages: number;
+  totalResults: number;
+}
+
 // Fetch all epochs
 export const fetchEpochs = async (): Promise<Epoch[]> => {
   const response = await fetch(`${BACKEND_API_URL}/epochs`);
@@ -236,6 +294,49 @@ export const fetchQTreatzOverview = async (): Promise<QTreatzOverview> => {
     throw new Error(`Failed to fetch QTREATZ overview: ${response.statusText}`);
   }
   return response.json();
+};
+
+export interface FetchQubicBayQdogeListingsOptions {
+  page?: number;
+  limit?: number;
+  fetchAllPages?: boolean;
+}
+
+export const fetchQubicBayQdogeListings = async (
+  options: FetchQubicBayQdogeListingsOptions = {},
+): Promise<QubicBayListing[]> => {
+  const { page = 1, limit = 46, fetchAllPages = true } = options;
+
+  const fetchPage = async (targetPage: number): Promise<QubicBayListingsResponse> => {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      page: String(targetPage),
+      details: "true",
+      status: "ACTIVE",
+      sortBy: "createdAt",
+      sortType: "desc",
+      collectionId: "15",
+    });
+
+    const response = await fetch(`https://api.qubicbay.io/v1/listings?${params.toString()}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch QDOGE NFT listings: ${response.statusText}`);
+    }
+    return response.json();
+  };
+
+  const firstPage = await fetchPage(page);
+  if (!fetchAllPages || firstPage.totalPages <= page) {
+    return firstPage.results;
+  }
+
+  const allListings = [...firstPage.results];
+  for (let nextPage = page + 1; nextPage <= firstPage.totalPages; nextPage += 1) {
+    const next = await fetchPage(nextPage);
+    allListings.push(...next.results);
+  }
+
+  return allListings;
 };
 
 export interface UserInfo {

@@ -82,7 +82,10 @@ export default function QTreatzOverview() {
                 ? formatAmount(String(Math.floor(Number(overview.qubic_per_circulating_qtreat))))
                 : "---"}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Qubic balance divided by circulating QTREAT.</p>
+            <p className="text-xs text-muted-foreground mt-1">Formula:</p>
+            <p className="text-xs font-medium text-foreground">
+              Qubic / (Circulating QTREAT + 200 NFTs)
+            </p>
           </CardContent>
         </Card>
       </div>
