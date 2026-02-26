@@ -9,6 +9,7 @@ import EpochRangeTransfers from "./EpochRangeTransfers";
 import MonthlyAirdropRangeResults from "./MonthlyAirdropRangeResults";
 import OrderbookCockpit from "./OrderbookCockpit";
 import QTreatzOverview from "./QTreatzOverview";
+import EpochNfts from "./EpochNfts";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useQubicConnect } from "@/components/connect/QubicConnectContext";
@@ -114,6 +115,8 @@ const DisplaySection: React.FC<DisplaySectionProps> = ({ period, activity }) => 
             )
           ) : activity === "QTREATZ" ? (
             <QTreatzOverview />
+          ) : activity === "NFTS" ? (
+            <EpochNfts />
           ) : (
             <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-center">
               <div className="rounded-lg border-2 border-dashed border-border p-6 md:p-10 bg-muted/10 w-full max-w-2xl">
